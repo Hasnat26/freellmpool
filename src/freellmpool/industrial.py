@@ -271,13 +271,14 @@ def _engineering_comparison(required: str, offered: str) -> bool | None:
         return lower <= right[0] <= upper
 
     range_match = re.fullmatch(
-        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)\\s*(?:to|\\-|\\.{2})\\s*"
+        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)?\\s*(?:to|\\-|\\.{2})\\s*"
         r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
         expression,
         flags=re.IGNORECASE,
     )
     if range_match:
-        low = _numeric_unit(f"{range_match.group(1)} {range_match.group(2)}")
+        low_unit = range_match.group(2) or range_match.group(4)
+        low = _numeric_unit(f"{range_match.group(1)} {low_unit}")
         high = _numeric_unit(f"{range_match.group(3)} {range_match.group(4)}")
         if low is None or high is None or low[1] != high[1] or low[1] != right[1]:
             return None

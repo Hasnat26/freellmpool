@@ -777,6 +777,13 @@ To run the workflow against your own structured input:
 ```bash
 freellmpool industrial-rfq --input examples/industrial_rfq/sample_input.json
 ```
+To use the LLM-assisted extraction boundary, provide raw RFQ and quotation text in the same envelope as `examples/industrial_rfq/raw_input.json`:
+
+```bash
+freellmpool industrial-rfq --extract examples/industrial_rfq/raw_input.json
+```
+
+The model is used only to extract explicitly stated engineering facts. The deterministic compliance engine remains responsible for COMPLIANT/DEVIATION/UNVERIFIED classification.
 
 The input format is documented by the sample file: requirements are explicit engineering criteria, while each vendor value must carry quotation evidence and an evidence status.
 

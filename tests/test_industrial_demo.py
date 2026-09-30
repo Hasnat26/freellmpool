@@ -123,3 +123,29 @@ def test_load_rfq_input_includes_commercial_data(tmp_path) -> None:
     assert vendor_data[0].value == "415 V"
     assert commercial[0].price == "10000"
     assert commercial[0].warranty == "24 months"
+
+
+def test_parameter_alias_and_unit_normalization() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    requirements = [
+        Requirement("R-01", "Rated voltage", "0.415 kV"),
+        Requirement("R-02", "Motor power", "75 kW"),
+    ]
+    vendor_data = [
+        VendorValue("Vendor X", "Nominal voltage", "415 V", "quotation p.1"),
+        VendorValue("Vendor X", "Rated power", "75000 W", "quotation p.1"),
+    ]
+    matrix = build_matrix(requirements, vendor_data)
+    assert [row["status"] for row in matrix] == ["COMPLIANT", "COMPLIANT"]
+    assert matrix[0]["offered_parameter"] == "Nominal voltage"
+
+
+def test_unit_mismatch_remains_deviation() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    matrix = build_matrix(
+        [Requirement("R-01", "Rated voltage", "415 V")],
+        [VendorValue("Vendor X", "Voltage", "400 V", "quotation p.1")],
+    )
+    assert matrix[0]["status"] == "DEVIATION"

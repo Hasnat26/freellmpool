@@ -24,7 +24,7 @@ def render_engineering_report(report: dict[str, Any], title: str = "Industrial R
         "## Technical compliance matrix",
         "",
         "| Requirement | Vendor | Parameter | Required | Offered | Status | Evidence |",
-        "|---|---|---|---|---|---|---|",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for row in report["matrix"]:
         lines.append(
@@ -47,7 +47,7 @@ def render_engineering_report(report: dict[str, Any], title: str = "Industrial R
                 f"{row['warranty']} | {row['payment_terms']} | {row['claim_status']} | {row['evidence']} |"
             )
 
-    lines += ["", "## Evidence register", "", "| Source | Vendor | Field | Value | Claim status | Review | Evidence |",
+    lines += ["", "## Evidence register", "", "| Source | Vendor | Field | Value | Claim status | Review | Evidence | Source | Page | Section | Table | Cell |",
               "|---|---|---|---|---|---|---|"]
     for row in report["evidence_register"]:
         lines.append(

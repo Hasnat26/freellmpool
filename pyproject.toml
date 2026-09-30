@@ -70,6 +70,7 @@ security = [
 ]
 
 [project.scripts]
+industrial-rfq-intelligence = "freellmpool.cli:main"
 freellmpool = "freellmpool.cli:main"
 ffp = "freellmpool.cli:main"
 

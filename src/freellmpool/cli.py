@@ -1,6 +1,7 @@
-"""Command-line interface for freellmpool.
+"""Command-line interface for Industrial RFQ Intelligence.
 
-freellmpool ask "question"        one-shot completion (reads stdin too)
+industrial-rfq-intelligence industrial-rfq --input <file> --markdown
+freellmpool ask "question"        legacy-compatible one-shot completion (reads stdin too)
 freellmpool tokenmax "question"   🌈 fan out to eligible targets, synthesize the swarm
 freellmpool providers            list configured / available providers
 freellmpool quota                show today's per-provider usage
@@ -2300,10 +2301,12 @@ def cmd_mcp(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="freellmpool",
-        description="Pool free-tier LLM APIs behind one OpenAI-compatible endpoint.",
+        prog="industrial-rfq-intelligence",
+        description="Industrial RFQ Intelligence engineering decision-support CLI.",
     )
-    parser.add_argument("--version", action="version", version=f"freellmpool {__version__}")
+    parser.add_argument(
+        "--version", action="version", version=f"industrial-rfq-intelligence {__version__}"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_ask = sub.add_parser("ask", help="one-shot completion")

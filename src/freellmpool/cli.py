@@ -266,6 +266,28 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_industrial_document(args: argparse.Namespace) -> int:
+    """Extract a local engineering document with source/page markers."""
+    from .industrial import document_text, extract_document_pages
+
+    try:
+        pages = extract_document_pages(args.file)
+        text = document_text(pages)
+    except ValueError as exc:
+        print(f"freellmpool industrial-document: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        import json
+        print(json.dumps({
+            "source": str(args.file),
+            "pages": len(pages),
+            "text": text,
+        }, indent=2, ensure_ascii=False))
+    else:
+        print(text)
+    return 0
+
+
 def cmd_roles(args: argparse.Namespace) -> int:
     print(format_roles())
     return 0

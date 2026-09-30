@@ -528,3 +528,105 @@ def test_rfq_contract_rejects_non_string_fields(tmp_path) -> None:
         assert "fields must be strings" in str(exc)
     else:
         raise AssertionError("non-string requirement field was accepted")
+
+
+def test_rfq_schema_version_is_supported_and_backward_compatible(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import RFQ_SCHEMA_VERSION, load_rfq_input
+
+    base = {
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [{"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V", "evidence": "quote p.1"}],
+    }
+    versioned = tmp_path / "versioned.json"
+    versioned.write_text(json.dumps({**base, "schema_version": RFQ_SCHEMA_VERSION}), encoding="utf-8")
+    legacy = tmp_path / "legacy.json"
+    legacy.write_text(json.dumps(base), encoding="utf-8")
+
+    assert load_rfq_input(versioned)[0][0].required == "415 V"
+    assert load_rfq_input(legacy)[0][0].required == "415 V"
+
+
+def test_unsupported_rfq_schema_version_fails_closed(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    payload = {
+        "schema_version": "99.0",
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [{"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V", "evidence": "quote p.1"}],
+    }
+    path = tmp_path / "future.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "unsupported RFQ schema_version" in str(exc)
+    else:
+        raise AssertionError("unsupported schema version was accepted")
+
+
+def test_rfq_schema_rejects_non_string_required_fields_and_duplicate_tags(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    cases = [
+        {"requirements": [{"tag": "R-01", "parameter": "Voltage", "required": 415}],
+         "vendor_data": [{"vendor": "Vendor X", "parameter": "Voltage", "value": "415 V"}]},
+        {"requirements": [
+            {"tag": "R-01", "parameter": "Voltage", "required": "415 V"},
+            {"tag": "r-01", "parameter": "Power", "required": "75 kW"},
+         ], "vendor_data": [{"vendor": "Vendor X", "parameter": "Voltage", "value": "415 V"}]},
+    ]
+    for index, payload in enumerate(cases):
+        path = tmp_path / f"schema-invalid-{index}.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        try:
+            load_rfq_input(path)
+        except ValueError as exc:
+            assert ("must be a string" in str(exc)) or ("duplicate requirement tag" in str(exc))
+        else:
+            raise AssertionError("invalid RFQ schema was accepted")
+
+
+def test_duplicate_vendor_claim_is_rejected_but_conflicting_claims_remain_supported(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    base = {
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [
+            {"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V", "evidence": "quote p.1"},
+            {"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V", "evidence": "quote p.1"},
+        ],
+    }
+    path = tmp_path / "duplicate-claim.json"
+    path.write_text(json.dumps(base), encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "duplicates an existing vendor claim" in str(exc)
+    else:
+        raise AssertionError("exact duplicate vendor claim was accepted")
+
+
+def test_duplicate_commercial_vendor_record_is_rejected(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    base = {
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [{"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V"}],
+        "commercial_data": [
+            {"vendor": "Vendor X", "price": "100", "currency": "USD", "lead_time": "1 week", "warranty": "12 months", "payment_terms": "30%"},
+            {"vendor": "vendor x", "price": "200", "currency": "USD", "lead_time": "2 weeks", "warranty": "12 months", "payment_terms": "50%"},
+        ],
+    }
+    path = tmp_path / "duplicate-commercial.json"
+    path.write_text(json.dumps(base), encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "duplicates commercial data" in str(exc)
+    else:
+        raise AssertionError("duplicate commercial vendor records were accepted")

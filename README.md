@@ -785,6 +785,8 @@ freellmpool industrial-rfq --extract examples/industrial_rfq/raw_input.json
 
 The model is used only to extract explicitly stated engineering facts. The deterministic compliance engine remains responsible for COMPLIANT/DEVIATION/UNVERIFIED classification.
 
+Commercial fields are kept separate from technical compliance and currently capture price, currency, lead time, warranty, payment terms, evidence, and claim status. The workflow reports these fields for engineer/commercial review; it does not select a winning vendor or make an unattended procurement decision.
+
 The input format is documented by the sample file: requirements are explicit engineering criteria, while each vendor value must carry quotation evidence and an evidence status.
 
 The repository-level compatibility demo remains available:

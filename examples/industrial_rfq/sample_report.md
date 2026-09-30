@@ -33,7 +33,7 @@ This report is an evidence-aware engineering review. It does not select a suppli
 ## Evidence register
 
 | Source | Vendor | Field | Value | Claim status | Review | Evidence | Source file | Page | Section | Table | Cell |
-|---|---|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|---|---|---|---|
 | technical_quotation | Vendor A | Nominal voltage | 0.415 kV | VERIFIED | NO | Quotation p.1 | Vendor quotation | 1 |  |  |  |
 | technical_quotation | Vendor A | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 | Vendor quotation | 1 |  |  |  |
 | technical_quotation | Vendor A | Efficiency class | IE3 | VERIFIED | NO | Quotation p.2 | Vendor quotation | 2 |  |  |  |

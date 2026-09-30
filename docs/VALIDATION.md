@@ -40,3 +40,6 @@ The current working environment cannot reliably clone/fetch the repository throu
 ## Validation principle
 
 **Configured is not passed. A green execution result is required before claiming a test or CI check passed.**
+## Sample RFQ reproducibility
+
+The active Industrial RFQ test suite loads examples/industrial_rfq/sample_input.json, renders the engineering report through the production renderer, and compares it byte-for-byte with examples/industrial_rfq/sample_report.md. This prevents the checked-in demonstration from drifting away from the actual deterministic workflow.

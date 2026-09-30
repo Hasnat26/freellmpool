@@ -107,6 +107,7 @@ testpaths = [
     "tests/test_industrial_demo.py",
     "tests/test_industrial_report.py",
     "tests/test_security_config.py",
+    "tests/test_release_config.py",
 ]
 addopts = "-q"
 pythonpath = [".", "src"]

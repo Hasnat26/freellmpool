@@ -135,14 +135,16 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Tied portfolio claims to inspectable repository artifacts and explicitly separated configuration evidence from execution evidence.
 - [x] Kept the unresolved P3-M14 CI execution-evidence gap visible rather than claiming CI success.
 
-### P3-M28 — Final acceptance gate
-- [ ] Real CI green-run evidence.
-- [ ] Benchmark acceptance evidence.
-- [ ] Security gate evidence.
-- [ ] Package/CLI smoke evidence.
-- [ ] Sample report consistency.
-- [ ] Public documentation audit.
-- [ ] Final release/portfolio readiness review.
+### P3-M28 — Final acceptance gate — BLOCKED BY P3-M14
+- [ ] Real CI green-run evidence — blocked: GitHub currently reports `total_count: 0` workflow runs.
+- [x] Benchmark acceptance artifacts are present and mapped in `docs/FINAL_ACCEPTANCE.md`.
+- [x] Security gate configuration and regression artifacts are present and mapped in `docs/FINAL_ACCEPTANCE.md`.
+- [x] Package/CLI smoke configuration is present and mapped in `docs/FINAL_ACCEPTANCE.md`.
+- [x] Sample report and consistency regression artifacts are present and mapped in `docs/FINAL_ACCEPTANCE.md`.
+- [x] Public documentation audit completed.
+- [ ] Final release/portfolio readiness review — blocked until real CI execution evidence exists.
+
+Acceptance evidence record: `docs/FINAL_ACCEPTANCE.md`.
 
 ### Phase non-goals
 
@@ -153,5 +155,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M27 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M28.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M27 complete. P3-M28 is blocked by P3-M14 because GitHub currently reports zero workflow runs. No final release/CI-green claim is made.
 

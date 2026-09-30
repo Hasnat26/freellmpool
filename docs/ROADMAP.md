@@ -92,11 +92,11 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Add evidence-aware commercial risk reporting.
 - [x] Do not introduce supplier ranking or winner selection.
 
-### P3-M21 — Document intelligence benchmark
-- [ ] Build a representative RFQ/quotation benchmark.
-- [ ] Include text, PDF, table-heavy, ambiguous, and contradictory cases.
-- [ ] Define extraction, provenance, and compliance metrics.
-- [ ] Separate LLM extraction quality from deterministic comparison quality.
+### P3-M21 — Document intelligence benchmark — DONE
+- [x] Build a representative RFQ/quotation benchmark.
+- [x] Include text, PDF, table-heavy, ambiguous, and contradictory cases.
+- [x] Define extraction, provenance, and compliance metrics.
+- [x] Separate LLM extraction quality from deterministic comparison quality.
 
 ### P3-M22 — Report quality and auditability
 - [ ] Add a stable report schema/version.
@@ -151,5 +151,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M19 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M21.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M19 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M22.
 

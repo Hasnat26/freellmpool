@@ -1,40 +1,82 @@
-# Release Checklist
+# Industrial RFQ Intelligence — Release Checklist
 
-This checklist is for the current Industrial RFQ Intelligence distribution.
+This checklist defines the minimum evidence required before publishing a release or making a package-installation claim.
 
-## Verify
+## 1. Repository state
+
+- [ ] Working tree changes are committed.
+- [ ] README describes the Industrial RFQ product, not a generic LLM gateway.
+- [ ] No release documentation claims unsupported provider capacity, gateway functionality, MCP listings, or production deployment.
+- [ ] Version in `pyproject.toml` is the intended release version.
+- [ ] Release notes, if published, contain only verified changes.
+
+## 2. Source and security gates
+
+- [ ] Ruff passes.
+- [ ] Industrial RFQ mypy check passes.
+- [ ] Full pytest suite passes.
+- [ ] Security workflow passes Bandit, pip-audit and zizmor gates.
+- [ ] Container security audit passes when the Docker image is built.
+- [ ] No active security exception is used to hide a finding.
+
+## 3. Package artifacts
+
+Run:
 
 ```bash
-python3 -m pip install -e ".[dev]"
-ruff check .
-python3 -m mypy --follow-imports=skip src/freellmpool/industrial.py src/freellmpool/industrial_report.py
-PYTHONPATH=src python3 -m pytest
-PYTHONPATH=src python3 -m pytest --cov=freellmpool --cov-branch --cov-report=term-missing --cov-report=json:.coverage.json
-python3 scripts/check_coverage.py .coverage.json
-python3 -m build
-python3 -m twine check dist/*.whl dist/*.tar.gz
-industrial-rfq-intelligence --version
-industrial-rfq-intelligence industrial-rfq --input examples/industrial_rfq/sample_input.json --json
-industrial-rfq-intelligence industrial-rfq --input examples/industrial_rfq/sample_input.json --markdown
+python -m build
+python -m twine check dist/*.whl dist/*.tar.gz
 ```
 
-## Release identity
+Verify:
 
-- Distribution name: `industrial-rfq-intelligence`
-- Native executable: `industrial-rfq-intelligence`
-- Product: Industrial RFQ Intelligence
-- Internal compatibility namespace: `freellmpool`
+- exactly one intended wheel is present;
+- exactly one intended sdist is present;
+- wheel contains the `freellmpool` runtime package required by the current compatibility namespace;
+- sdist contains `pyproject.toml` and source files;
+- no obsolete gateway/provider/MCP release assets are packaged.
 
-Do not describe the compatibility namespace as the public product identity.
+## 4. Native CLI installation
 
-## Evidence requirements
+Test both artifacts in a clean virtual environment:
 
-Before publishing a release, confirm:
+```bash
+python -m venv /tmp/industrial-rfq-release-smoke
+/tmp/industrial-rfq-release-smoke/bin/python -m pip install dist/*.whl
+/tmp/industrial-rfq-release-smoke/bin/industrial-rfq-intelligence --version
+/tmp/industrial-rfq-release-smoke/bin/industrial-rfq-intelligence industrial-rfq \
+  --input examples/industrial_rfq/sample_input.json --markdown
+```
 
-1. tests and packaging checks actually executed;
-2. the Industrial RFQ CLI smoke tests completed successfully;
-3. product documentation matches the implemented behavior;
-4. no release artifact claims unsupported MCP/plugin/gateway publication;
-5. no inferred engineering claim is presented as verified evidence.
+Then repeat after replacing the wheel with the sdist.
 
-CI configuration alone is not evidence of a successful release check. Record the actual workflow run when available.
+The CLI smoke must produce a non-empty report.
+
+## 5. Product boundary
+
+A release must preserve these boundaries:
+
+- LLM output is extraction assistance, not final compliance authority.
+- Deterministic Python logic performs compliance classification.
+- Evidence and claim status remain visible.
+- Missing or unsupported evidence fails closed.
+- The system does not autonomously select a vendor.
+- The system does not modify PLC/DCS logic or operate plant equipment.
+- No production credentials are required for the sample workflow.
+
+## 6. CI evidence rule
+
+Repository configuration is not evidence of execution.
+
+Do not state that a release is CI-verified until a real GitHub Actions run for the relevant commit has completed successfully. P3-M14 tracks that execution evidence separately.
+
+## 7. Release claim rule
+
+Only publish claims supported by one of:
+
+1. executable CI output;
+2. reproducible local execution;
+3. checked-in test/fixture evidence;
+4. directly inspectable source/configuration evidence.
+
+Do not convert planned functionality into an implemented-feature claim.

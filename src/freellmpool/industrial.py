@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal, Sequence
+from typing import Literal, Sequence, cast
 
 ClaimStatus = Literal[
     "VERIFIED",
@@ -120,7 +120,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
             raise ValueError(f"vendor_data[${index}] required fields must not be empty")
         if claim_status not in allowed_statuses:
             raise ValueError(f"vendor_data[${index}] invalid claim_status: ${claim_status!r}")
-        vendor_data.append(VendorValue(vendor, parameter, value, evidence, claim_status))
+        vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status)))
 
     return requirements, vendor_data
 

@@ -120,7 +120,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     for index, item in enumerate(raw_vendor_data):
         if not isinstance(item, dict):
             raise ValueError(f"vendor_data[{index}] must be an object")
-        missing = next((field for field in ("vendor", "parameter", "value", "evidence") if field not in item), None)
+        missing = next((field for field in ("vendor", "parameter", "value") if field not in item), None)
         if missing:
             raise ValueError(f"vendor_data[{index}] missing field: {missing}")
         vendor = str(item["vendor"]).strip()
@@ -128,8 +128,10 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         value = str(item["value"]).strip()
         evidence = str(item["evidence"]).strip()
         claim_status = str(item.get("claim_status", "UNVERIFIED")).strip().upper()
-        if not vendor or not parameter or not value or not evidence:
+        if not vendor or not parameter or not value:
             raise ValueError(f"vendor_data[{index}] required fields must not be empty")
+        if not evidence:
+            claim_status = "UNVERIFIED"
         if claim_status not in allowed_statuses:
             raise ValueError(f"vendor_data[{index}] invalid claim_status: {claim_status!r}")
         vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status)))
@@ -138,7 +140,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     if not isinstance(raw_commercial, list):
         raise ValueError("RFQ input 'commercial_data' must be an array when provided")
     commercial_data: list[CommercialValue] = []
-    commercial_fields = ("vendor", "price", "currency", "lead_time", "warranty", "payment_terms", "evidence")
+    commercial_fields = ("vendor", "price", "currency", "lead_time", "warranty", "payment_terms")
     for index, item in enumerate(raw_commercial):
         if not isinstance(item, dict):
             raise ValueError(f"commercial_data[{index}] must be an object")
@@ -146,12 +148,15 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         if missing:
             raise ValueError(f"commercial_data[{index}] missing field: {missing}")
         values = {field: str(item[field]).strip() for field in commercial_fields}
+        evidence = str(item.get("evidence", "")).strip()
         claim_status = str(item.get("claim_status", "UNVERIFIED")).strip().upper()
         if any(not values[field] for field in commercial_fields):
             raise ValueError(f"commercial_data[{index}] required fields must not be empty")
+        if not evidence:
+            claim_status = "UNVERIFIED"
         if claim_status not in allowed_statuses:
             raise ValueError(f"commercial_data[{index}] invalid claim_status: {claim_status!r}")
-        commercial_data.append(CommercialValue(**values, claim_status=cast(ClaimStatus, claim_status)))
+        commercial_data.append(CommercialValue(**values, evidence=evidence, claim_status=cast(ClaimStatus, claim_status)))
 
     return requirements, vendor_data, commercial_data
 

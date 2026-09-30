@@ -236,7 +236,7 @@ def build_matrix(
                         "requirement": req.tag,
                         "vendor": vendor,
                         "parameter": req.parameter,
-                        "offered_parameter": item.parameter,
+                        "offered_parameter": "MISSING",
                         "required": req.required,
                         "offered": "MISSING",
                         "status": "UNVERIFIED",
@@ -263,6 +263,16 @@ def build_matrix(
     return rows
 
 
+
+def build_evidence_register(requirements: Sequence[Requirement], vendor_data: Sequence[VendorValue], commercial_data: Sequence[CommercialValue] = ()) -> list[dict[str, str]]:
+    """Return a traceable evidence register for every supplied claim."""
+    rows: list[dict[str, str]] = []
+    for item in vendor_data:
+        rows.append({"source_type": "technical_quotation", "vendor": item.vendor, "field": item.parameter, "value": item.value, "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO"})
+    for item in commercial_data:
+        rows.append({"source_type": "commercial_quotation", "vendor": item.vendor, "field": "price / lead_time / warranty / payment_terms", "value": f"{item.price} {item.currency}; {item.lead_time}; {item.warranty}; {item.payment_terms}", "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO"})
+    return rows
+
 def build_report(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
@@ -274,6 +284,8 @@ def build_report(
     values = _normalise_vendor_data(vendor_data)
     commercial = tuple(commercial_data or ())
     matrix = build_matrix(reqs, values)
+    evidence_register = build_evidence_register(reqs, values, commercial)
+    review_claims = [row for row in evidence_register if row["review_required"] == "YES"]
     deviations = [row for row in matrix if row["status"] == "DEVIATION"]
     unverified = [row for row in matrix if row["status"] == "UNVERIFIED"]
     vendors = tuple(dict.fromkeys(item.vendor for item in values))
@@ -292,9 +304,12 @@ def build_report(
             "deviations": len(deviations),
             "unverified_fields": len(unverified),
             "commercial_records": len(commercial),
+            "evidence_records": len(evidence_register),
+            "claims_requiring_review": len(review_claims),
         },
         "matrix": matrix,
         "commercial_comparison": [asdict(item) for item in commercial],
+        "evidence_register": evidence_register,
         "review_actions": [
             {
                 "vendor": row["vendor"],
@@ -357,6 +372,7 @@ __all__ = [
     "VendorValue",
     "CommercialValue",
     "build_matrix",
+    "build_evidence_register",
     "build_report",
     "load_rfq_input",
     "extract_rfq_with_llm",

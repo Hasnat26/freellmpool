@@ -754,4 +754,35 @@ reproduction, SBOMs, and provenance verification are documented in
 ## License
 
 MIT
-\n\n## Industrial Engineering Product Demo\n\nThis repository also contains a portfolio-ready industrial engineering workflow built on the gateway architecture. The first workflow is a deterministic RFQ compliance review that demonstrates requirement extraction, vendor comparison, deviation detection, evidence references, and structured output.\n\n### Run the demo\n\nNo API key or external service is required for the deterministic demo:\n\n\`\`\`bash\npython industrial_demo.py\n\`\`\`\n\nFor machine-readable output:\n\n\`\`\`bash\npython industrial_demo.py --json\npython industrial_demo.py --output rfq-report.json\n\`\`\`\n\nRun the focused tests with:\n\n\`\`\`bash\npython -m pytest tests/test_industrial_demo.py -q\n\`\`\`\n\nThe product specification and acceptance criteria are documented in [INDUSTRIAL_PRODUCT.md](INDUSTRIAL_PRODUCT.md). The industrial layer is intentionally evidence-aware: unsupported claims remain UNVERIFIED rather than being silently promoted to facts.\n
+\n\n## Industrial Engineering Product Demo
+
+This repository also contains a portfolio-ready industrial engineering workflow built on the gateway architecture. The first workflow is a deterministic RFQ compliance review that demonstrates requirement extraction, vendor comparison, deviation detection, evidence references, and structured output.
+
+### Run the industrial RFQ workflow
+
+The first industrial vertical is an evidence-aware RFQ compliance reviewer. It is part of the installable package and can be run through the main CLI; no API key or external service is required for the deterministic baseline.
+
+```bash
+freellmpool industrial-rfq
+```
+
+For machine-readable output:
+
+```bash
+freellmpool industrial-rfq --json
+freellmpool industrial-rfq --output rfq-report.json
+```
+
+The repository-level compatibility demo remains available:
+
+```bash
+python industrial_demo.py
+```
+
+Run the focused tests with:
+
+```bash
+python -m pytest tests/test_industrial_demo.py -q
+```
+
+The product specification and acceptance criteria are documented in [INDUSTRIAL_PRODUCT.md](INDUSTRIAL_PRODUCT.md). The industrial layer is evidence-aware: missing or unsupported claims remain UNVERIFIED rather than being silently promoted to facts. The deterministic baseline is intentionally separate from future LLM-assisted document extraction.

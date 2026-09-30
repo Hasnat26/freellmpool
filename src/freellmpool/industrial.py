@@ -47,7 +47,7 @@ class CommercialValue:
     warranty: str
     payment_terms: str
     evidence: str
-    claim_status: ClaimStatus = "VERIFIED"
+    claim_status: ClaimStatus = "UNVERIFIED"
 
 
 DEFAULT_REQUIREMENTS: tuple[Requirement, ...] = (

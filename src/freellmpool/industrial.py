@@ -315,7 +315,7 @@ __all__ = [
     "write_report",
 ]
 
-def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[str, str]]) -> tuple[list[Requirement], list[VendorValue]]:
+def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[str, str]]) -> tuple[list[Requirement], list[VendorValue], list[CommercialValue]]:
     """Extract structured RFQ data with the gateway, then validate it locally.
 
     The model is an extractor only. Compliance status is calculated later by
@@ -340,6 +340,7 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         "vendor_data": [{"vendor": "Vendor A", "parameter": "Rated voltage",
                          "value": "415 V", "evidence": "Vendor A quotation, section 2",
                          "claim_status": "VERIFIED"}],
+        "commercial_data": [{"vendor": "Vendor A", "price": "10000", "currency": "USD", "lead_time": "8 weeks", "warranty": "12 months", "payment_terms": "30% advance", "evidence": "Vendor A quotation, commercial section", "claim_status": "VERIFIED"}],
     }
     system = (
         "You are an engineering document extraction component. Extract only facts explicitly stated "
@@ -371,8 +372,7 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
             json.dump(payload, handle, ensure_ascii=False)
             temp_path = Path(handle.name)
-        requirements, vendor_data, _commercial = load_rfq_input(temp_path)
-        return requirements, vendor_data
+        return load_rfq_input(temp_path)
     finally:
         if temp_path is not None:
             temp_path.unlink(missing_ok=True)

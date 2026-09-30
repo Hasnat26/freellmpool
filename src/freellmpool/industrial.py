@@ -69,6 +69,62 @@ def _normalise_vendor_data(
     return tuple(vendor_data or DEFAULT_VENDOR_DATA)
 
 
+def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValue]]:
+    """Load and strictly validate a structured RFQ JSON input file."""
+    input_path = Path(path)
+    try:
+        payload = json.loads(input_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise ValueError(f"cannot read RFQ input '${input_path}': ${exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid RFQ JSON in '${input_path}': ${exc.msg}") from exc
+
+    if not isinstance(payload, dict):
+        raise ValueError("RFQ input must be a JSON object")
+
+    raw_requirements = payload.get("requirements")
+    raw_vendor_data = payload.get("vendor_data")
+    if not isinstance(raw_requirements, list) or not raw_requirements:
+        raise ValueError("RFQ input requires a non-empty 'requirements' array")
+    if not isinstance(raw_vendor_data, list) or not raw_vendor_data:
+        raise ValueError("RFQ input requires a non-empty 'vendor_data' array")
+
+    requirements: list[Requirement] = []
+    for index, item in enumerate(raw_requirements):
+        if not isinstance(item, dict):
+            raise ValueError(f"requirements[${index}] must be an object")
+        missing = next((field for field in ("tag", "parameter", "required") if field not in item), None)
+        if missing:
+            raise ValueError(f"requirements[${index}] missing field: ${missing}")
+        tag = str(item["tag"]).strip()
+        parameter = str(item["parameter"]).strip()
+        required = str(item["required"]).strip()
+        if not tag or not parameter or not required:
+            raise ValueError(f"requirements[${index}] fields must not be empty")
+        requirements.append(Requirement(tag, parameter, required))
+
+    allowed_statuses = {"VERIFIED", "PARTIALLY VERIFIED", "UNVERIFIED", "INFERENCE", "ASSUMPTION", "CONTRADICTED"}
+    vendor_data: list[VendorValue] = []
+    for index, item in enumerate(raw_vendor_data):
+        if not isinstance(item, dict):
+            raise ValueError(f"vendor_data[${index}] must be an object")
+        missing = next((field for field in ("vendor", "parameter", "value", "evidence") if field not in item), None)
+        if missing:
+            raise ValueError(f"vendor_data[${index}] missing field: ${missing}")
+        vendor = str(item["vendor"]).strip()
+        parameter = str(item["parameter"]).strip()
+        value = str(item["value"]).strip()
+        evidence = str(item["evidence"]).strip()
+        claim_status = str(item.get("claim_status", "VERIFIED")).strip().upper()
+        if not vendor or not parameter or not value or not evidence:
+            raise ValueError(f"vendor_data[${index}] required fields must not be empty")
+        if claim_status not in allowed_statuses:
+            raise ValueError(f"vendor_data[${index}] invalid claim_status: ${claim_status!r}")
+        vendor_data.append(VendorValue(vendor, parameter, value, evidence, claim_status))
+
+    return requirements, vendor_data
+
+
 def build_matrix(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
@@ -217,6 +273,7 @@ __all__ = [
     "VendorValue",
     "build_matrix",
     "build_report",
+    "load_rfq_input",
     "render_report",
     "write_report",
 ]

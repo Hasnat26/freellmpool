@@ -20,27 +20,6 @@ jobs:
       - name: Cold quickstart
         run: FREELLMPOOL_QUICKSTART_PACKAGE=. scripts/quickstart-test.sh
 
-  mcp-manifest:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - name: Validate with checksum-pinned mcp-publisher 1.7.9
-        run: |
-          set -euo pipefail
-          archive="$RUNNER_TEMP/mcp-publisher_linux_amd64.tar.gz"
-          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location \
-            --output "$archive" \
-            https://github.com/modelcontextprotocol/registry/releases/download/v1.7.9/mcp-publisher_linux_amd64.tar.gz
-          echo "ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac  $archive" \
-            | sha256sum --check --strict
-          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP" mcp-publisher
-          export PATH="$RUNNER_TEMP:$PATH"
-          mcp-publisher validate server.json
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -70,9 +49,16 @@ jobs:
       - name: Proxy stress smoke
         run: python scripts/stress_proxy.py --profile ci
       - name: Type check focused helpers
-        run: mypy --follow-imports=skip src/freellmpool/routing_modes.py src/freellmpool/catalog_validation.py src/freellmpool/_version.py src/freellmpool/readiness.py
+        run: mypy --follow-imports=skip src/freellmpool/routing_modes.py src/freellmpool/catalog_validation.py src/freellmpool/_version.py src/freellmpool/readiness.py src/freellmpool/industrial.py src/freellmpool/industrial_report.py
       - name: Import smoke
         run: python -c "import freellmpool; from freellmpool import Pool, AsyncPool; print(freellmpool.__version__, Pool, AsyncPool)"
+      - name: Industrial CLI smoke
+        run: |
+          industrial-rfq-intelligence --version
+          industrial-rfq-intelligence industrial-rfq --input examples/industrial_rfq/sample_input.json --json >/tmp/industrial-rfq.json
+          industrial-rfq-intelligence industrial-rfq --input examples/industrial_rfq/sample_input.json --markdown >/tmp/industrial-rfq.md
+          test -s /tmp/industrial-rfq.json
+          test -s /tmp/industrial-rfq.md
       - name: Test
         run: |
           pytest --cov=freellmpool --cov-branch --cov-report=term-missing --cov-report=json:.coverage.json

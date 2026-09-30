@@ -2384,6 +2384,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_industrial.set_defaults(func=cmd_industrial_rfq)
 
+    p_document = sub.add_parser(
+        "industrial-document",
+        help="extract engineering text from TXT, Markdown, or PDF with provenance",
+    )
+    p_document.add_argument("file", help="path to .txt, .md, or .pdf document")
+    p_document.add_argument("--json", action="store_true", help="emit source/page metadata as JSON")
+    p_document.set_defaults(func=cmd_industrial_document)
     p_roles = sub.add_parser("roles", help="list available ask roles")
     p_roles.set_defaults(func=cmd_roles)
 

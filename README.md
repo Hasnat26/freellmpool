@@ -783,7 +783,7 @@ To use the LLM-assisted extraction boundary, provide raw RFQ and quotation text 
 freellmpool industrial-rfq --extract examples/industrial_rfq/raw_input.json
 ```
 
-The model is used only to extract explicitly stated engineering facts. The deterministic compliance engine remains responsible for COMPLIANT/DEVIATION/UNVERIFIED classification. Parameter aliases and basic electrical units such as V/kV and W/kW/MW are normalized before comparison, while the original offered parameter/value remain visible for traceability.
+The model is used only to extract explicitly stated engineering facts. The deterministic compliance engine remains responsible for COMPLIANT/DEVIATION/UNVERIFIED classification. Parameter aliases and basic electrical units such as V/kV and W/kW/MW are normalized before comparison, while the original offered parameter/value remain visible for traceability. Every technical/commercial claim also appears in an evidence register with source reference, claim status, and an explicit review flag when the claim is not VERIFIED.
 
 Commercial fields are kept separate from technical compliance and currently capture price, currency, lead time, warranty, payment terms, evidence, and claim status. The workflow reports these fields for engineer/commercial review; it does not select a winning vendor or make an unattended procurement decision.
 

@@ -230,13 +230,13 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
 
     from .industrial import build_report, load_rfq_input, render_report, write_report
 
-    requirements = vendor_data = None
+    requirements = vendor_data = commercial_data = None
     if args.input and args.extract:
         print("freellmpool industrial-rfq: use either --input or --extract, not both", file=sys.stderr)
         return 2
     if args.input:
         try:
-            requirements, vendor_data = load_rfq_input(args.input)
+            requirements, vendor_data, commercial_data = load_rfq_input(args.input)
         except ValueError as exc:
             print(f"freellmpool industrial-rfq: {exc}", file=sys.stderr)
             return 2
@@ -254,7 +254,7 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             print(f"freellmpool industrial-rfq: {exc}", file=sys.stderr)
             return 2
-    report = build_report(requirements, vendor_data)
+    report = build_report(requirements, vendor_data, commercial_data)
     if args.output:
         write_report(report, args.output)
         print(f"Wrote report: {args.output}")

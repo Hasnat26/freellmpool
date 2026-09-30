@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from freellmpool.industrial import (
     Requirement,
     VendorValue,
@@ -356,3 +358,29 @@ def test_document_rfq_extraction_passes_provenance_to_llm() -> None:
     finally:
         rfq.unlink(missing_ok=True)
         quote.unlink(missing_ok=True)
+def test_sample_rfq_is_reproducible_and_report_matches_fixture() -> None:
+    from freellmpool.industrial import build_report, load_rfq_input
+    from freellmpool.industrial_report import render_engineering_report
+
+    root = Path(__file__).resolve().parents[1]
+    input_path = root / "examples" / "industrial_rfq" / "sample_input.json"
+    report_path = root / "examples" / "industrial_rfq" / "sample_report.md"
+
+    requirements, vendor_data, commercial = load_rfq_input(input_path)
+    report = build_report(requirements, vendor_data, commercial)
+    rendered = render_engineering_report(report) + "\n"
+
+    assert report["summary"] == {
+        "requirements_checked": 4,
+        "vendors_checked": 2,
+        "matrix_rows": 8,
+        "deviations": 1,
+        "unverified_fields": 0,
+        "commercial_records": 2,
+        "evidence_records": 10,
+        "claims_requiring_review": 0,
+    }
+    assert rendered == report_path.read_text(encoding="utf-8")
+    assert report["matrix"][6]["status"] == "DEVIATION"
+    assert report["matrix"][6]["vendor"] == "Vendor B"
+    assert report["matrix"][6]["parameter"] == "Efficiency class"

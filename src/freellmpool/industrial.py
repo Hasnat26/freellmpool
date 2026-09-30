@@ -156,6 +156,50 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     return requirements, vendor_data, commercial_data
 
 
+@dataclass(frozen=True)
+class DocumentPage:
+    source: str
+    page: int
+    text: str
+
+
+def extract_document_pages(path: str | Path) -> list[DocumentPage]:
+    """Extract text while preserving source and page provenance."""
+    document = Path(path)
+    if not document.is_file():
+        raise ValueError(f"document not found: {document}")
+    suffix = document.suffix.casefold()
+    if suffix in {".txt", ".md"}:
+        text = document.read_text(encoding="utf-8")
+        return [DocumentPage(str(document), 1, text)]
+    if suffix == ".pdf":
+        try:
+            from pypdf import PdfReader
+        except ImportError as exc:
+            raise ValueError("PDF ingestion requires the pypdf dependency") from exc
+        try:
+            reader = PdfReader(str(document))
+        except Exception as exc:
+            raise ValueError(f"cannot read PDF: {document}") from exc
+        pages: list[DocumentPage] = []
+        for number, page in enumerate(reader.pages, start=1):
+            text = page.extract_text() or ""
+            pages.append(DocumentPage(str(document), number, text))
+        if not pages:
+            raise ValueError(f"PDF contains no pages: {document}")
+        return pages
+    raise ValueError("unsupported document type; expected .txt, .md, or .pdf")
+
+
+def document_text(pages: Sequence[DocumentPage]) -> str:
+    """Build LLM-ready text with explicit source/page markers."""
+    return "\n\n".join(
+        f"[SOURCE: {page.source} | PAGE: {page.page}]\n{page.text.strip()}"
+        for page in pages
+        if page.text.strip()
+    )
+
+
 _PARAMETER_ALIASES = {
     "rated voltage": "rated voltage",
     "voltage": "rated voltage",
@@ -371,6 +415,9 @@ __all__ = [
     "Requirement",
     "VendorValue",
     "CommercialValue",
+    "DocumentPage",
+    "extract_document_pages",
+    "document_text",
     "build_matrix",
     "build_evidence_register",
     "build_report",

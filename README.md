@@ -77,7 +77,7 @@ For document-based extraction, source and page markers are preserved so an extra
 The included sample demonstrates a two-vendor motor evaluation.
 
 ~~~bash
-freellmpool industrial-rfq \
+industrial-rfq-intelligence industrial-rfq \
   --input examples/industrial_rfq/sample_input.json \
   --markdown
 ~~~
@@ -95,7 +95,7 @@ The sample report contains:
 A machine-readable JSON result is also supported:
 
 ~~~bash
-freellmpool industrial-rfq \
+industrial-rfq-intelligence industrial-rfq \
   --input examples/industrial_rfq/sample_input.json \
   --json
 ~~~
@@ -107,7 +107,7 @@ The current Python package/CLI namespace remains \`freellmpool\` for implementat
 Raw RFQ and quotation text can be passed through the grounded extraction boundary:
 
 ~~~bash
-freellmpool industrial-rfq \
+industrial-rfq-intelligence industrial-rfq \
   --extract examples/industrial_rfq/raw_input.json
 ~~~
 

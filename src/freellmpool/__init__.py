@@ -1,13 +1,4 @@
-"""freellmpool — pool free-tier LLM APIs behind one OpenAI-compatible endpoint.
-
-Public API:
-
-    from freellmpool import Pool
-
-    pool = Pool.from_default_config()
-    reply = pool.ask("Explain CAP theorem in one sentence.")
-    print(reply.text)
-"""
+"""Industrial RFQ Intelligence Python package namespace.\n\nThe implementation package path remains ``freellmpool`` for backward\ncompatibility with the existing codebase. The repository and product identity\nare ``industrial-rfq-intelligence``; industrial RFQ functionality lives under\nthis compatibility namespace while package-path cleanup is handled separately.\n\nLegacy pool/provider APIs remain available to avoid breaking existing imports.\n"""
 
 from ._version import __version__
 from .errors import (

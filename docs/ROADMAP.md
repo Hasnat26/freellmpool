@@ -116,10 +116,10 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Remove stale demo/social-preview/tokenmax binary assets tied to the legacy surface.
 - [x] Recheck the primary README/product documentation surface; retained `freellmpool` only where required for implementation compatibility.
 
-### P3-M25 — Security/dependency gate
-- [ ] Verify Bandit, pip-audit and zizmor/security workflows.
-- [ ] Review dependency and supply-chain controls.
-- [ ] Add security regression cases for document ingestion and LLM boundaries.
+### P3-M25 — Security/dependency gate — DONE
+- [x] Verify and enforce Bandit, pip-audit, zizmor and container security workflows.
+- [x] Review dependency and supply-chain controls: weekly Dependabot coverage for pip, GitHub Actions and Docker; commit-pinned workflow actions; bounded security-exception registry.
+- [x] Add security regression cases for document ingestion, prompt-like untrusted text, unsupported active content types and evidence/provenance boundaries.
 
 ### P3-M26 — Packaging/release readiness
 - [ ] Verify wheel/sdist contents and native CLI installation.
@@ -151,5 +151,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M24 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M25.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M25 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M26.
 

@@ -13,7 +13,7 @@ from freellmpool.industrial import build_report, render_report, write_report
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the industrial RFQ compliance demo.")
+    parser = argparse.ArgumentParser(description="Run the Industrial RFQ Intelligence engineering demo.")
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--output", help="write the JSON report to this file")
     args = parser.parse_args()

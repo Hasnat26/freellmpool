@@ -156,6 +156,53 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     return requirements, vendor_data, commercial_data
 
 
+_PARAMETER_ALIASES = {
+    "rated voltage": "rated voltage",
+    "voltage": "rated voltage",
+    "nominal voltage": "rated voltage",
+    "motor voltage": "rated voltage",
+    "motor power": "motor power",
+    "rated power": "motor power",
+    "power": "motor power",
+    "efficiency class": "efficiency class",
+    "efficiency": "efficiency class",
+    "energy efficiency": "efficiency class",
+    "ingress protection": "ingress protection",
+    "ip rating": "ingress protection",
+    "protection": "ingress protection",
+}
+
+def _normalise_parameter(parameter: str) -> str:
+    key = " ".join(parameter.casefold().replace("_", " ").replace("-", " ").split())
+    return _PARAMETER_ALIASES.get(key, key)
+
+def _normalise_value(value: str) -> str:
+    return " ".join(value.casefold().replace(",", "").split())
+
+def _numeric_unit(value: str) -> tuple[float, str] | None:
+    import re
+    match = re.fullmatch(r"([-+]?\d+(?:\.\d+)?)\s*([a-zA-Z%]+)", value.strip())
+    if not match:
+        return None
+    number = float(match.group(1))
+    unit = match.group(2).casefold()
+    conversions = {
+        "v": ("v", 1.0), "kv": ("v", 1000.0),
+        "w": ("w", 1.0), "kw": ("w", 1000.0), "mw": ("w", 1_000_000.0),
+    }
+    if unit not in conversions:
+        return None
+    canonical, multiplier = conversions[unit]
+    return number * multiplier, canonical
+
+def _values_match(required: str, offered: str) -> bool:
+    left = _numeric_unit(required)
+    right = _numeric_unit(offered)
+    if left is not None and right is not None and left[1] == right[1]:
+        return left[0] == right[0]
+    return _normalise_value(required) == _normalise_value(offered)
+
+
 def build_matrix(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
@@ -178,7 +225,8 @@ def build_matrix(
                 (
                     value
                     for value in values
-                    if value.vendor == vendor and value.parameter == req.parameter
+                    if value.vendor == vendor
+                    and _normalise_parameter(value.parameter) == _normalise_parameter(req.parameter)
                 ),
                 None,
             )
@@ -188,6 +236,7 @@ def build_matrix(
                         "requirement": req.tag,
                         "vendor": vendor,
                         "parameter": req.parameter,
+                        "offered_parameter": item.parameter,
                         "required": req.required,
                         "offered": "MISSING",
                         "status": "UNVERIFIED",
@@ -197,7 +246,7 @@ def build_matrix(
                 )
                 continue
 
-            status = "COMPLIANT" if item.value == req.required else "DEVIATION"
+            status = "COMPLIANT" if _values_match(item.value, req.required) else "DEVIATION"
             rows.append(
                 {
                     "requirement": req.tag,

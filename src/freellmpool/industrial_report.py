@@ -1,0 +1,82 @@
+"""Recruiter-facing rendering for the industrial RFQ workflow."""
+
+from __future__ import annotations
+
+from typing import Any
+
+
+def render_engineering_report(report: dict[str, Any], title: str = "Industrial RFQ Engineering Review") -> str:
+    """Render a concise Markdown report without ranking vendors or making procurement decisions."""
+    summary = report["summary"]
+    lines = [
+        f"# {title}",
+        "",
+        "## Executive summary",
+        "",
+        f"- Requirements checked: **{summary['requirements_checked']}**",
+        f"- Vendors checked: **{summary['vendors_checked']}**",
+        f"- Deviations: **{summary['deviations']}**",
+        f"- Unverified fields: **{summary['unverified_fields']}**",
+        f"- Claims requiring review: **{summary['claims_requiring_review']}**",
+        "",
+        "This report is an evidence-aware engineering review. It does not select a supplier or make an autonomous procurement decision.",
+        "",
+        "## Technical compliance matrix",
+        "",
+        "| Requirement | Vendor | Parameter | Required | Offered | Status | Evidence |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for row in report["matrix"]:
+        lines.append(
+            f"| {row['requirement']} | {row['vendor']} | {row['parameter']} | "
+            f"{row['required']} | {row['offered']} | {row['status']} | {row['evidence']} |"
+        )
+
+    commercial = report.get("commercial_comparison", [])
+    if commercial:
+        lines += [
+            "",
+            "## Commercial information",
+            "",
+            "| Vendor | Price | Currency | Lead time | Warranty | Payment terms | Claim status | Evidence |",
+            "|---|---:|---|---|---|---|---|---|",
+        ]
+        for row in commercial:
+            lines.append(
+                f"| {row['vendor']} | {row['price']} | {row['currency']} | {row['lead_time']} | "
+                f"{row['warranty']} | {row['payment_terms']} | {row['claim_status']} | {row['evidence']} |"
+            )
+
+    lines += ["", "## Evidence register", "", "| Source | Vendor | Field | Value | Claim status | Review | Evidence |",
+              "|---|---|---|---|---|---|---|"]
+    for row in report["evidence_register"]:
+        lines.append(
+            f"| {row['source_type']} | {row['vendor']} | {row['field']} | {row['value']} | "
+            f"{row['claim_status']} | {row['review_required']} | {row['evidence']} |"
+        )
+
+    actions = report.get("review_actions", [])
+    lines += ["", "## Engineer review actions", ""]
+    if actions:
+        for row in actions:
+            lines.append(
+                f"- **{row['vendor']} / {row['parameter']}**: offered `{row['offered']}`, "
+                f"required `{row['required']}`. Verify against source evidence: {row['evidence']}."
+            )
+    else:
+        lines.append("- No technical deviations require review in this dataset.")
+
+    lines += [
+        "",
+        "## Controls and limitations",
+        "",
+        "- LLM output is treated as extraction assistance, not as the compliance decision.",
+        "- Compliance status is calculated by the deterministic comparison engine.",
+        "- Missing or unsupported claims remain reviewable rather than being silently inferred.",
+        "- Commercial fields are presented for review; no automatic winner is selected.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+__all__ = ["render_engineering_report"]

@@ -80,11 +80,11 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [ ] Add provenance fixtures and regression tests.
 - [ ] Preserve contradiction/review states end-to-end.
 
-### P3-M19 — Engineering comparison expansion
-- [ ] Add parameter-specific engineering semantics.
-- [ ] Expand industrial unit coverage deliberately.
-- [ ] Add boundary, range, tolerance, and incompatible-dimension tests.
-- [ ] Keep unsupported semantics fail-closed.
+### P3-M19 — Engineering comparison expansion — DONE
+- [x] Add parameter-specific engineering semantics.
+- [x] Expand industrial unit coverage deliberately.
+- [x] Add boundary, range, tolerance, and incompatible-dimension tests.
+- [x] Keep unsupported semantics fail-closed.
 
 ### P3-M20 — Commercial/risk review layer
 - [ ] Normalize commercial fields.
@@ -151,5 +151,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 complete. Next execution target: P3-M14.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M19 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M20.
 

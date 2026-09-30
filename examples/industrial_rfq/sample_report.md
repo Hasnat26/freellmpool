@@ -13,7 +13,7 @@ This report is an evidence-aware engineering review. It does not select a suppli
 ## Technical compliance matrix
 
 | Requirement | Vendor | Parameter | Required | Offered | Status | Evidence |
-|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|---|---|---|
 | R-01 | Vendor A | Rated voltage | 415 V | 0.415 kV | COMPLIANT | Quotation p.1 |
 | R-02 | Vendor A | Motor power | 75 kW | 75 kW | COMPLIANT | Quotation p.1 |
 | R-03 | Vendor A | Efficiency class | IE3 | IE3 | COMPLIANT | Quotation p.2 |
@@ -32,18 +32,18 @@ This report is an evidence-aware engineering review. It does not select a suppli
 
 ## Evidence register
 
-| Source | Vendor | Field | Value | Claim status | Review | Evidence |
+| Source | Vendor | Field | Value | Claim status | Review | Evidence | Source file | Page | Section | Table | Cell |
 |---|---|---|---|---|---|---|
-| technical_quotation | Vendor A | Nominal voltage | 0.415 kV | VERIFIED | NO | Quotation p.1 |
-| technical_quotation | Vendor A | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 |
-| technical_quotation | Vendor A | Efficiency class | IE3 | VERIFIED | NO | Quotation p.2 |
-| technical_quotation | Vendor A | Ingress protection | IP55 | VERIFIED | NO | Quotation p.2 |
-| technical_quotation | Vendor B | Rated voltage | 415 V | VERIFIED | NO | Quotation p.1 |
-| technical_quotation | Vendor B | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 |
-| technical_quotation | Vendor B | Efficiency class | IE2 | VERIFIED | NO | Quotation p.2 |
-| technical_quotation | Vendor B | Ingress protection | IP55 | VERIFIED | NO | Quotation p.2 |
-| commercial_quotation | Vendor A | price / lead_time / warranty / payment_terms | 10000 USD; 8 weeks; 24 months; 30% advance, 70% before shipment | VERIFIED | NO | Quotation p.3 |
-| commercial_quotation | Vendor B | price / lead_time / warranty / payment_terms | 9200 USD; 12 weeks; 12 months; 50% advance, 50% before shipment | VERIFIED | NO | Quotation p.3 |
+| technical_quotation | Vendor A | Nominal voltage | 0.415 kV | VERIFIED | NO | Quotation p.1 | Vendor quotation | 1 |  |  |  |
+| technical_quotation | Vendor A | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 | Vendor quotation | 1 |  |  |  |
+| technical_quotation | Vendor A | Efficiency class | IE3 | VERIFIED | NO | Quotation p.2 | Vendor quotation | 2 |  |  |  |
+| technical_quotation | Vendor A | Ingress protection | IP55 | VERIFIED | NO | Quotation p.2 | Vendor quotation | 2 |  |  |  |
+| technical_quotation | Vendor B | Rated voltage | 415 V | VERIFIED | NO | Quotation p.1 | Vendor quotation | 1 |  |  |  |
+| technical_quotation | Vendor B | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 | Vendor quotation | 1 |  |  |  |
+| technical_quotation | Vendor B | Efficiency class | IE2 | VERIFIED | NO | Quotation p.2 | Vendor quotation | 2 |  |  |  |
+| technical_quotation | Vendor B | Ingress protection | IP55 | VERIFIED | NO | Quotation p.2 | Vendor quotation | 2 |  |  |  |
+| commercial_quotation | Vendor A | price / lead_time / warranty / payment_terms | 10000 USD; 8 weeks; 24 months; 30% advance, 70% before shipment | VERIFIED | NO | Quotation p.3 | Vendor quotation | 3 | Commercial |  |  |
+| commercial_quotation | Vendor B | price / lead_time / warranty / payment_terms | 9200 USD; 12 weeks; 12 months; 50% advance, 50% before shipment | VERIFIED | NO | Quotation p.3 | Vendor quotation | 3 | Commercial |  |  |
 
 ## Engineer review actions
 

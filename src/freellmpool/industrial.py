@@ -87,9 +87,9 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     try:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
     except OSError as exc:
-        raise ValueError(f"cannot read RFQ input '{input_path}': ${exc}") from exc
+        raise ValueError(f"cannot read RFQ input '{input_path}': {exc}") from exc
     except json.JSONDecodeError as exc:
-        raise ValueError(f"invalid RFQ JSON in '{input_path}': ${exc.msg}") from exc
+        raise ValueError(f"invalid RFQ JSON in '{input_path}': {exc.msg}") from exc
 
     if not isinstance(payload, dict):
         raise ValueError("RFQ input must be a JSON object")

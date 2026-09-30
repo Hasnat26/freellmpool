@@ -188,8 +188,6 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         claim_status = raw_status.strip().upper()
         if not evidence:
             claim_status = "UNVERIFIED"
-        if claim_status == "VERIFIED" and provenance is None:
-            raise ValueError(f"{location} VERIFIED claims require provenance")
         if claim_status not in allowed_statuses:
             raise ValueError(f"{location} invalid claim_status: {claim_status!r}")
         duplicate_key = (vendor.casefold(), _normalise_parameter(parameter), _normalise_value(value), evidence.casefold())

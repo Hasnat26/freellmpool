@@ -103,6 +103,23 @@ def test_llm_extraction_reuses_strict_validation() -> None:
     assert commercial == []
 
 
+def test_conflicting_vendor_claims_are_unverified() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    matrix = build_matrix(
+        [Requirement("R-01", "Rated voltage", "415 V")],
+        [
+            VendorValue("Vendor X", "Rated voltage", "415 V", "quote p.1", "VERIFIED"),
+            VendorValue("Vendor X", "Nominal voltage", "400 V", "quote p.4", "VERIFIED"),
+        ],
+    )
+    assert matrix[0]["status"] == "UNVERIFIED"
+    assert matrix[0]["claim_status"] == "CONTRADICTED"
+    assert matrix[0]["offered"] == "CONFLICTING"
+    assert "quote p.1: 415 V" in matrix[0]["evidence"]
+    assert "quote p.4: 400 V" in matrix[0]["evidence"]
+
+
 def test_missing_evidence_forces_unverified(tmp_path) -> None:
     import json
     from freellmpool.industrial import load_rfq_input

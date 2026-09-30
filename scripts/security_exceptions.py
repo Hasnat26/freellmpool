@@ -22,7 +22,7 @@ _FIELDS = frozenset(
 _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{2,127}")
 _OWNER = re.compile(r"@[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
 _ISSUE = re.compile(
-    r"https://github\.com/0xzr/freellmpool/"
+    r"https://github\.com/Hasnat26/industrial-rfq-intelligence/"
     r"(?:issues/[1-9][0-9]*|security/advisories/GHSA-[A-Za-z0-9-]+)"
 )
 _MAX_POLICY_BYTES = 256_000

@@ -36,6 +36,7 @@ def test_missing_fields_are_unverified() -> None:
 def test_report_contains_review_actions_and_summary() -> None:
     report = build_report()
     assert report["workflow"] == "rfq-compliance-review"
+    assert report["product"] == "industrial-rfq-intelligence"
     summary = report["summary"]
     assert summary["requirements_checked"] == 4
     assert summary["vendors_checked"] == 2

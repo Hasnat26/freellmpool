@@ -149,3 +149,16 @@ def test_unit_mismatch_remains_deviation() -> None:
         [VendorValue("Vendor X", "Voltage", "400 V", "quotation p.1")],
     )
     assert matrix[0]["status"] == "DEVIATION"
+
+
+def test_report_contains_evidence_register_and_review_flags() -> None:
+    from freellmpool.industrial import CommercialValue, VendorValue, build_report
+    report = build_report(
+        [Requirement("R-01", "Rated voltage", "415 V")],
+        [VendorValue("Vendor X", "Voltage", "415 V", "quote p.1", "PARTIALLY VERIFIED")],
+        [CommercialValue("Vendor X", "10000", "USD", "8 weeks", "12 months", "30% advance", "quote p.3")],
+    )
+    assert report["summary"]["evidence_records"] == 2
+    assert report["summary"]["claims_requiring_review"] == 1
+    assert report["evidence_register"][0]["review_required"] == "YES"
+    assert report["evidence_register"][1]["review_required"] == "NO"

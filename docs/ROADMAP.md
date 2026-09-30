@@ -104,11 +104,11 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Add report auditability regression coverage.
 - [x] Refresh the checked-in Markdown report fixture.
 
-### P3-M23 — Reviewer workflow interface
-- [ ] Design upload → extraction → review → report states.
-- [ ] Define a local/API reviewer workflow.
-- [ ] Keep human approval explicit.
-- [ ] Exclude production credentials and unattended procurement actions.
+### P3-M23 — Reviewer workflow interface — DONE
+- [x] Design UPLOAD → EXTRACTION → REVIEW → REPORT states.
+- [x] Define a local/API-neutral reviewer workflow contract.
+- [x] Require explicit human approval before REPORT.
+- [x] Exclude production credentials, autonomous procurement actions and unattended approval.
 
 ### P3-M24 — Repository/public-surface cleanup
 - [ ] Audit remaining legacy gateway docs, HTML, issue templates, scripts and assets.
@@ -151,5 +151,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M22 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M23.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M23 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M24.
 

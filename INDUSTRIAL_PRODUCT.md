@@ -177,6 +177,7 @@ The system is designed to keep unsupported or uncertain information visible rath
 
 **Default rule:** when `claim_status` is omitted from vendor or commercial input, the implementation assigns `UNVERIFIED`. `VERIFIED` must be explicitly supplied by the input/extraction layer when the evidence supports that status. Built-in demonstration records use explicit `VERIFIED` values.
 If evidence is omitted or empty, the claim is forced to `UNVERIFIED` and flagged for engineering review. Missing evidence never becomes verified merely because a value or status was supplied.
+If multiple claims for the same vendor and normalized parameter materially disagree, the compliance result is `UNVERIFIED` with claim status `CONTRADICTED`. The conflicting values and evidence references are retained so an engineer can resolve the source discrepancy. Contradictory claims are never treated as compliant.
 
 ## 7. Output
 

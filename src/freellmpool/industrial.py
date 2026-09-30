@@ -236,8 +236,29 @@ def _numeric_unit(value: str) -> tuple[float, str] | None:
     number = float(match.group(1))
     unit = match.group(2).casefold()
     conversions = {
+        # Electrical voltage
         "v": ("v", 1.0), "kv": ("v", 1000.0),
+        # Electrical/current
+        "a": ("a", 1.0), "ka": ("a", 1000.0),
+        # Power
         "w": ("w", 1.0), "kw": ("w", 1000.0), "mw": ("w", 1_000_000.0),
+        # Frequency
+        "hz": ("hz", 1.0), "khz": ("hz", 1000.0), "mhz": ("hz", 1_000_000.0),
+        # Rotational speed
+        "rpm": ("rpm", 1.0), "r/min": ("rpm", 1.0),
+        # Torque
+        "nm": ("nm", 1.0), "knm": ("nm", 1000.0),
+        # Temperature
+        "c": ("c", 1.0), "°c": ("c", 1.0),
+        # Pressure
+        "bar": ("pa", 100_000.0), "mbar": ("pa", 100.0),
+        "mpa": ("pa", 1_000_000.0), "kpa": ("pa", 1_000.0),
+        "pa": ("pa", 1.0),
+        # Length
+        "mm": ("m", 0.001), "cm": ("m", 0.01), "m": ("m", 1.0),
+        "km": ("m", 1000.0),
+        # Mass
+        "g": ("kg", 0.001), "kg": ("kg", 1.0), "t": ("kg", 1000.0),
     }
     if unit not in conversions:
         return None

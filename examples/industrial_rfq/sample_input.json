@@ -70,5 +70,27 @@
       "value": "IP55",
       "evidence": "Quotation p.2"
     }
+  ],
+  "commercial_data": [
+    {
+      "vendor": "Vendor A",
+      "price": "10000",
+      "currency": "USD",
+      "lead_time": "8 weeks",
+      "warranty": "24 months",
+      "payment_terms": "30% advance, 70% before shipment",
+      "evidence": "Quotation p.3",
+      "claim_status": "VERIFIED"
+    },
+    {
+      "vendor": "Vendor B",
+      "price": "9200",
+      "currency": "USD",
+      "lead_time": "12 weeks",
+      "warranty": "12 months",
+      "payment_terms": "50% advance, 50% before shipment",
+      "evidence": "Quotation p.3",
+      "claim_status": "VERIFIED"
+    }
   ]
 }

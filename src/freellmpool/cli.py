@@ -250,7 +250,7 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
                 raise ValueError("extract input requires a quotations array")
             pool = Pool.from_default_config()
             from .industrial import extract_rfq_with_llm
-            requirements, vendor_data = extract_rfq_with_llm(pool, rfq_text, quotations)
+            requirements, vendor_data, commercial_data = extract_rfq_with_llm(pool, rfq_text, quotations)
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             print(f"freellmpool industrial-rfq: {exc}", file=sys.stderr)
             return 2

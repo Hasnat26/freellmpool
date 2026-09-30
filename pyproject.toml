@@ -3,42 +3,33 @@ requires = ["hatchling==1.32.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "freellmpool"
-version = "0.13.0"
-description = "Free LLM gateway: 22 LLM providers, 178 enabled chat routes, 431 cataloged chat models; keyless start when available."
+name = "industrial-rfq-intelligence"
+version = "0.1.0"
+description = "Evidence-aware AI-assisted technical and commercial review for industrial RFQs and vendor quotations."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-authors = [{ name = "0xzr" }]
+authors = [{ name = "Md. Abul Hasnat" }]
 keywords = [
-    "anthropic",
-    "claude",
+    "industrial-ai",
+    "rfq",
+    "quotation-analysis",
+    "vendor-evaluation",
+    "engineering",
+    "epc",
+    "industrial-automation",
+    "procurement",
+    "technical-compliance",
+    "document-intelligence",
     "llm",
-    "free-llm",
-    "openai",
-    "openai-compatible",
-    "proxy",
-    "gateway",
-    "llm-gateway",
-    "router",
-    "free",
-    "groq",
-    "cerebras",
-    "openrouter",
-    "gemini",
-    "mcp",
-    "model-context-protocol",
-    "cursor",
-    "speech-to-text",
-    "transcription",
-    "rate-limiting",
-    "load-balancer",
-    "failover",
+    "evidence-traceability",
+    "decision-support",
+    "python",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
-    "Framework :: AsyncIO",
+    "Intended Audience :: Engineering",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -47,7 +38,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries",
     "Topic :: Utilities",
@@ -58,11 +49,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/0xzr/freellmpool"
-Docs = "https://0xzr.github.io/freellmpool/"
-Repository = "https://github.com/0xzr/freellmpool"
-Changelog = "https://github.com/0xzr/freellmpool/blob/main/CHANGELOG.md"
-Issues = "https://github.com/0xzr/freellmpool/issues"
+Homepage = "https://github.com/Hasnat26/industrial-rfq-intelligence"
+Repository = "https://github.com/Hasnat26/industrial-rfq-intelligence"
+Issues = "https://github.com/Hasnat26/industrial-rfq-intelligence/issues"
 
 [project.optional-dependencies]
 dev = [

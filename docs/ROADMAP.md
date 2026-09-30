@@ -48,3 +48,108 @@ The product will not become:
 - a system that presents inferred claims as verified evidence.
 
 The legacy `freellmpool` runtime modules remain in the repository only where needed for implementation compatibility. They are not the product roadmap.
+
+## Master milestone: P3-M14 → P3-M28 — Production Readiness
+
+The next phase is tracked as one master milestone with sequential sub-milestones. Each sub-milestone should be completed and reported before starting the next.
+
+### P3-M14 — CI execution evidence
+- [ ] Determine why GitHub Actions reports zero workflow runs.
+- [ ] Confirm workflow execution on push/PR.
+- [ ] Capture the first real green run before claiming CI success.
+
+### P3-M15 — CI/test configuration reconciliation
+- [ ] Audit stale tests asserting deleted legacy workflows.
+- [ ] Remove, rewrite, or quarantine obsolete assertions.
+- [ ] Ensure active product validation cannot be masked by stale tests.
+
+### P3-M16 — Industrial core API cleanup
+- [ ] Audit legacy `freellmpool` identity leakage from product-facing output/API.
+- [ ] Replace misleading legacy product strings where safe.
+- [ ] Preserve the compatibility namespace only where required and documented.
+
+### P3-M17 — Input/schema contract hardening
+- [ ] Define a versioned Industrial RFQ input schema.
+- [ ] Harden type/required-field validation.
+- [ ] Add duplicate, malformed-value, and compatibility cases.
+- [ ] Document schema compatibility expectations.
+
+### P3-M18 — Evidence/provenance hardening
+- [ ] Standardize source/page/section/table/cell provenance.
+- [ ] Require explicit evidence for VERIFIED claims.
+- [ ] Add provenance fixtures and regression tests.
+- [ ] Preserve contradiction/review states end-to-end.
+
+### P3-M19 — Engineering comparison expansion
+- [ ] Add parameter-specific engineering semantics.
+- [ ] Expand industrial unit coverage deliberately.
+- [ ] Add boundary, range, tolerance, and incompatible-dimension tests.
+- [ ] Keep unsupported semantics fail-closed.
+
+### P3-M20 — Commercial/risk review layer
+- [ ] Normalize commercial fields.
+- [ ] Add delivery/warranty/payment exception flags.
+- [ ] Add evidence-aware commercial risk reporting.
+- [ ] Do not introduce supplier ranking or winner selection.
+
+### P3-M21 — Document intelligence benchmark
+- [ ] Build a representative RFQ/quotation benchmark.
+- [ ] Include text, PDF, table-heavy, ambiguous, and contradictory cases.
+- [ ] Define extraction, provenance, and compliance metrics.
+- [ ] Separate LLM extraction quality from deterministic comparison quality.
+
+### P3-M22 — Report quality and auditability
+- [ ] Add a stable report schema/version.
+- [ ] Improve engineer review actions and traceability.
+- [ ] Add machine-readable and Markdown fixtures.
+- [ ] Add report consistency gates.
+
+### P3-M23 — Reviewer workflow interface
+- [ ] Design upload → extraction → review → report states.
+- [ ] Define a local/API reviewer workflow.
+- [ ] Keep human approval explicit.
+- [ ] Exclude production credentials and unattended procurement actions.
+
+### P3-M24 — Repository/public-surface cleanup
+- [ ] Audit remaining legacy gateway docs, HTML, issue templates, scripts and assets.
+- [ ] Remove/archive obsolete public material where safe.
+- [ ] Resolve stale binary social-preview/docs assets.
+- [ ] Recheck README, metadata, links and navigation.
+
+### P3-M25 — Security/dependency gate
+- [ ] Verify Bandit, pip-audit and zizmor/security workflows.
+- [ ] Review dependency and supply-chain controls.
+- [ ] Add security regression cases for document ingestion and LLM boundaries.
+
+### P3-M26 — Packaging/release readiness
+- [ ] Verify wheel/sdist contents and native CLI installation.
+- [ ] Remove misleading legacy release claims.
+- [ ] Define an Industrial RFQ release checklist.
+- [ ] Only publish claims backed by executable evidence.
+
+### P3-M27 — Portfolio/recruiter evidence pack
+- [ ] Create a concise architecture/evidence page.
+- [ ] Add one reproducible end-to-end demo path.
+- [ ] Document engineering problem, deterministic controls, evidence policy and limitations.
+- [ ] Keep all portfolio claims measurable and defensible.
+
+### P3-M28 — Final acceptance gate
+- [ ] Real CI green-run evidence.
+- [ ] Benchmark acceptance evidence.
+- [ ] Security gate evidence.
+- [ ] Package/CLI smoke evidence.
+- [ ] Sample report consistency.
+- [ ] Public documentation audit.
+- [ ] Final release/portfolio readiness review.
+
+### Phase non-goals
+
+This phase will not add:
+- autonomous purchasing;
+- vendor winner/ranking automation;
+- PLC/DCS control execution;
+- inferred claims presented as VERIFIED;
+- production deployment or production credentials.
+
+Current status: P3-M1 through P3-M13 complete. Next execution target: P3-M14.
+

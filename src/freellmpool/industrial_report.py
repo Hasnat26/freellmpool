@@ -48,11 +48,11 @@ def render_engineering_report(report: dict[str, Any], title: str = "Industrial R
             )
 
     lines += ["", "## Evidence register", "", "| Source | Vendor | Field | Value | Claim status | Review | Evidence | Source | Page | Section | Table | Cell |",
-              "|---|---|---|---|---|---|---|"]
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
     for row in report["evidence_register"]:
         lines.append(
             f"| {row['source_type']} | {row['vendor']} | {row['field']} | {row['value']} | "
-            f"{row['claim_status']} | {row['review_required']} | {row['evidence']} |"
+            f"{row['claim_status']} | {row['review_required']} | {row['evidence']} | {row['source']} | {row['page']} | {row['section']} | {row['table']} | {row['cell']} |"
         )
 
     actions = report.get("review_actions", [])

@@ -224,6 +224,24 @@ def cmd_ask(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_industrial_rfq(args: argparse.Namespace) -> int:
+    """Run the deterministic industrial RFQ compliance workflow."""
+    import json
+
+    from .industrial import build_report, render_report, write_report
+
+    report = build_report()
+    if args.output:
+        write_report(report, args.output)
+        print(f"Wrote report: {args.output}")
+        return 0
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0
+    print(render_report(report))
+    return 0
+
+
 def cmd_roles(args: argparse.Namespace) -> int:
     print(format_roles())
     return 0
@@ -2296,6 +2314,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_ask.add_argument("-v", "--verbose", action="store_true", help="report which provider served")
     p_ask.set_defaults(func=cmd_ask)
+
+    p_industrial = sub.add_parser(
+        "industrial-rfq",
+        help="run the evidence-aware industrial RFQ compliance workflow",
+    )
+    p_industrial.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable JSON instead of the human-readable report",
+    )
+    p_industrial.add_argument(
+        "--output",
+        help="write the JSON report to a file instead of printing it",
+    )
+    p_industrial.set_defaults(func=cmd_industrial_rfq)
 
     p_roles = sub.add_parser("roles", help="list available ask roles")
     p_roles.set_defaults(func=cmd_roles)

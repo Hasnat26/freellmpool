@@ -576,7 +576,16 @@ def build_evidence_register(requirements: Sequence[Requirement], vendor_data: Se
     for item in vendor_data:
         rows.append({"source_type": "technical_quotation", "vendor": item.vendor, "field": item.parameter, "value": item.value, "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO", **_provenance_fields(item.provenance)})
     for item in commercial_data:
-        rows.append({"source_type": "commercial_quotation", "vendor": item.vendor, "field": "price / lead_time / warranty / payment_terms", "value": f"{item.price} {item.currency}; {item.lead_time}; {item.warranty}; {item.payment_terms}", "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO"})
+        rows.append({
+            "source_type": "commercial_quotation",
+            "vendor": item.vendor,
+            "field": "price / lead_time / warranty / payment_terms",
+            "value": f"{item.price} {item.currency}; {item.lead_time}; {item.warranty}; {item.payment_terms}",
+            "evidence": item.evidence,
+            "claim_status": item.claim_status,
+            "review_required": "YES" if item.claim_status != "VERIFIED" else "NO",
+            **_provenance_fields(item.provenance),
+        })
     return rows
 
 _COMMERCIAL_LEAD_TIME_REVIEW_WEEKS = 12.0

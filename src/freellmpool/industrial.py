@@ -1,4 +1,4 @@
-"""Industrial engineering workflows for freellmpool.
+"""Industrial RFQ intelligence workflows for the industrial-rfq-intelligence package.
 
 The first vertical slice is a deterministic RFQ compliance reviewer.  It is
 deliberately dependency-free and can be used as a stable foundation for a
@@ -464,7 +464,7 @@ def build_report(
     vendors = tuple(dict.fromkeys(item.vendor for item in values))
 
     return {
-        "product": "freellmpool industrial engineering",
+        "product": "industrial-rfq-intelligence",
         "workflow": "rfq-compliance-review",
         "evidence_policy": (
             "Only explicit supporting quotation evidence may be marked VERIFIED; "
@@ -503,7 +503,7 @@ def render_report(report: dict[str, object]) -> str:
     summary = report["summary"]
     assert isinstance(summary, dict)
     lines = [
-        "Industrial Engineering AI Gateway — RFQ compliance review",
+        "Industrial RFQ Intelligence — RFQ compliance review",
         "=" * 62,
         "Workflow: RFQ → requirement extraction → compliance review",
         "",

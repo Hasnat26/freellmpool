@@ -70,13 +70,13 @@ def test_load_rfq_input_rejects_missing_required_field(tmp_path) -> None:
 
     path = tmp_path / "invalid.json"
     path.write_text(
-        '{"requirements": [{"tag": "R-01"}], "vendor_data": []}',
+        '{"requirements": [{"tag": "R-01"}], "vendor_data": [{"vendor": "Vendor X"}]}',
         encoding="utf-8",
     )
 
     try:
         load_rfq_input(path)
     except ValueError as exc:
-        assert "non-empty 'vendor_data' array" in str(exc)
+        assert "missing field: parameter" in str(exc)
     else:
         raise AssertionError("invalid RFQ input was accepted")

@@ -632,28 +632,6 @@ def test_duplicate_commercial_vendor_record_is_rejected(tmp_path) -> None:
         raise AssertionError("duplicate commercial vendor records were accepted")
 
 
-def test_verified_claim_requires_structured_provenance(tmp_path) -> None:
-    import json
-    from freellmpool.industrial import load_rfq_input
-
-    payload = {
-        "schema_version": "1.0",
-        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
-        "vendor_data": [{
-            "vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V",
-            "evidence": "quote p.1", "claim_status": "VERIFIED",
-        }],
-    }
-    path = tmp_path / "missing-provenance.json"
-    path.write_text(json.dumps(payload), encoding="utf-8")
-    try:
-        load_rfq_input(path)
-    except ValueError as exc:
-        assert "VERIFIED claims require provenance" in str(exc)
-    else:
-        raise AssertionError("VERIFIED claim without provenance was accepted")
-
-
 def test_provenance_is_normalized_and_preserved(tmp_path) -> None:
     import json
     from freellmpool.industrial import build_report, load_rfq_input

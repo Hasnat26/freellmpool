@@ -176,6 +176,7 @@ A reviewable claim should retain:
 The system is designed to keep unsupported or uncertain information visible rather than silently converting it into accepted engineering facts.
 
 **Default rule:** when `claim_status` is omitted from vendor or commercial input, the implementation assigns `UNVERIFIED`. `VERIFIED` must be explicitly supplied by the input/extraction layer when the evidence supports that status. Built-in demonstration records use explicit `VERIFIED` values.
+If evidence is omitted or empty, the claim is forced to `UNVERIFIED` and flagged for engineering review. Missing evidence never becomes verified merely because a value or status was supplied.
 
 ## 7. Output
 

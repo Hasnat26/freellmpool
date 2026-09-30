@@ -36,3 +36,7 @@ This boundary is deliberate. It prevents legacy gateway behavior from becoming a
 A green Industrial RFQ test run means the current product boundary passed the configured tests. It does not mean every retained historical compatibility module is fully validated.
 
 The repository does not claim CI success until an actual GitHub Actions run provides execution evidence.
+
+## Negative-path coverage
+
+The active suite also verifies fail-closed behavior for malformed JSON, empty RFQ collections, invalid claim statuses, unsupported numeric units, and claims that match numerically but remain UNVERIFIED. A matching value does not override an unverified evidence state; the report keeps the claim reviewable.

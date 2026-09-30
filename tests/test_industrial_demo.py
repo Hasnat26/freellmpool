@@ -103,6 +103,39 @@ def test_llm_extraction_reuses_strict_validation() -> None:
     assert commercial == []
 
 
+def test_missing_evidence_forces_unverified(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    path = tmp_path / "rfq.json"
+    path.write_text(
+        json.dumps({
+            "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+            "vendor_data": [{
+                "vendor": "Vendor X",
+                "parameter": "Rated voltage",
+                "value": "415 V",
+                "claim_status": "VERIFIED",
+            }],
+            "commercial_data": [{
+                "vendor": "Vendor X",
+                "price": "10000",
+                "currency": "USD",
+                "lead_time": "8 weeks",
+                "warranty": "12 months",
+                "payment_terms": "30% advance",
+                "claim_status": "VERIFIED",
+            }],
+        }),
+        encoding="utf-8",
+    )
+    _, vendor_data, commercial = load_rfq_input(path)
+    assert vendor_data[0].evidence == ""
+    assert vendor_data[0].claim_status == "UNVERIFIED"
+    assert commercial[0].evidence == ""
+    assert commercial[0].claim_status == "UNVERIFIED"
+
+
 def test_claim_status_defaults_to_unverified(tmp_path) -> None:
     import json
     from freellmpool.industrial import load_rfq_input

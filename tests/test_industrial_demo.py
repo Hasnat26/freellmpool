@@ -59,7 +59,7 @@ def test_load_rfq_input_from_json(tmp_path) -> None:
         encoding="utf-8",
     )
 
-    requirements, vendor_data = load_rfq_input(path)
+    requirements, vendor_data, commercial = load_rfq_input(path)
     assert requirements[0].parameter == "Rated voltage"
     assert vendor_data[0].vendor == "Vendor X"
     assert vendor_data[0].claim_status == "VERIFIED"

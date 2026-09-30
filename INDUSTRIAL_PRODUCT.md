@@ -148,7 +148,7 @@ Current compliance outcomes are:
 - DEVIATION
 - UNVERIFIED
 
-The current comparison model is intentionally conservative and primarily equality-based. Engineering tolerances, ranges, and relational operators are future hardening work.
+The deterministic comparison engine supports numeric equality, relational operators (`>=`, `<=`, `>`, `<`), inclusive numeric ranges, and percentage tolerances when compatible engineering units are available. Unsupported expressions fall back to normalized exact matching; the engine does not infer unsupported engineering semantics.
 
 ## 6. Evidence and claim policy
 
@@ -263,6 +263,7 @@ Implemented in the current repository:
 - commercial-value extraction;
 - parameter alias normalization;
 - basic electrical unit normalization;
+- engineering operators, ranges, and percentage tolerances;
 - deterministic compliance matrix;
 - evidence register;
 - review flags;
@@ -276,7 +277,7 @@ Not yet implemented:
 
 - OCR for scanned documents;
 - robust table extraction;
-- engineering tolerances/ranges/operators;
+- broader industrial unit normalization;
 - broad industrial unit normalization;
 - Excel report generation;
 - PDF report generation;

@@ -103,6 +103,28 @@ def test_llm_extraction_reuses_strict_validation() -> None:
     assert commercial == []
 
 
+def test_claim_status_defaults_to_unverified(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    path = tmp_path / "rfq.json"
+    path.write_text(
+        json.dumps({
+            "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+            "vendor_data": [{
+                "vendor": "Vendor X",
+                "parameter": "Rated voltage",
+                "value": "415 V",
+                "evidence": "quote p.1",
+            }],
+        }),
+        encoding="utf-8",
+    )
+    _, vendor_data, commercial = load_rfq_input(path)
+    assert vendor_data[0].claim_status == "UNVERIFIED"
+    assert commercial == []
+
+
 def test_load_rfq_input_includes_commercial_data(tmp_path) -> None:
     import json
     from freellmpool.industrial import load_rfq_input
@@ -156,7 +178,7 @@ def test_report_contains_evidence_register_and_review_flags() -> None:
     report = build_report(
         [Requirement("R-01", "Rated voltage", "415 V")],
         [VendorValue("Vendor X", "Voltage", "415 V", "quote p.1", "PARTIALLY VERIFIED")],
-        [CommercialValue("Vendor X", "10000", "USD", "8 weeks", "12 months", "30% advance", "quote p.3")],
+        [CommercialValue("Vendor X", "10000", "USD", "8 weeks", "12 months", "30% advance", "quote p.3", "VERIFIED")],
     )
     assert report["summary"]["evidence_records"] == 2
     assert report["summary"]["claims_requiring_review"] == 1

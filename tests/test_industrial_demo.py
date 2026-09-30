@@ -464,3 +464,67 @@ def test_unverified_claim_remains_reviewable_even_with_matching_value() -> None:
     assert report["matrix"][0]["status"] == "COMPLIANT"
     assert report["matrix"][0]["claim_status"] == "UNVERIFIED"
     assert report["summary"]["claims_requiring_review"] == 1
+
+
+def test_rfq_schema_version_contract(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import RFQ_SCHEMA_VERSION, load_rfq_input
+
+    base = {
+        "schema_version": RFQ_SCHEMA_VERSION,
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [{"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V"}],
+    }
+    path = tmp_path / "versioned.json"
+    path.write_text(json.dumps(base), encoding="utf-8")
+    requirements, vendor_data, _ = load_rfq_input(path)
+    assert requirements[0].tag == "R-01"
+    assert vendor_data[0].claim_status == "UNVERIFIED"
+
+    base["schema_version"] = "99.0"
+    path.write_text(json.dumps(base), encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "unsupported RFQ schema_version" in str(exc)
+    else:
+        raise AssertionError("unsupported schema version was accepted")
+
+
+def test_duplicate_requirement_tags_are_rejected(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    payload = {
+        "requirements": [
+            {"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"},
+            {"tag": "R-01", "parameter": "Motor power", "required": "75 kW"},
+        ],
+        "vendor_data": [{"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V"}],
+    }
+    path = tmp_path / "duplicate.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "duplicate tag" in str(exc)
+    else:
+        raise AssertionError("duplicate requirement tag was accepted")
+
+
+def test_rfq_contract_rejects_non_string_fields(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    payload = {
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": 415}],
+        "vendor_data": [{"vendor": "Vendor X", "parameter": "Rated voltage", "value": "415 V"}],
+    }
+    path = tmp_path / "wrong-type.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "fields must be strings" in str(exc)
+    else:
+        raise AssertionError("non-string requirement field was accepted")

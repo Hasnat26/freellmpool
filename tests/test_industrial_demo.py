@@ -100,3 +100,25 @@ def test_llm_extraction_reuses_strict_validation() -> None:
     assert requirements[0].required == "415 V"
     assert vendor_data[0].value == "400 V"
     assert vendor_data[0].evidence == "Vendor X quotation p.1"
+
+
+def test_load_rfq_input_includes_commercial_data(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    payload = {
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [{"vendor": "Vendor A", "parameter": "Rated voltage", "value": "415 V", "evidence": "p.1"}],
+        "commercial_data": [{
+            "vendor": "Vendor A", "price": "10000", "currency": "USD",
+            "lead_time": "8 weeks", "warranty": "24 months",
+            "payment_terms": "30% advance", "evidence": "p.3"
+        }],
+    }
+    path = tmp_path / "rfq.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    requirements, vendor_data, commercial = load_rfq_input(path)
+    assert requirements[0].required == "415 V"
+    assert vendor_data[0].value == "415 V"
+    assert commercial[0].price == "10000"
+    assert commercial[0].warranty == "24 months"

@@ -775,3 +775,66 @@ def test_unsupported_engineering_expression_fails_closed() -> None:
         [VendorValue("Vendor X", "Rated voltage", "415 V", "quote p.1", "VERIFIED")],
     )
     assert matrix[0]["status"] == "DEVIATION"
+
+
+def test_commercial_risk_review_normalizes_fields_and_flags_exceptions() -> None:
+    from freellmpool.industrial import CommercialValue, build_commercial_risk_review
+
+    rows = build_commercial_risk_review([
+        CommercialValue(
+            "Vendor A",
+            "10,500",
+            "usd",
+            "14 weeks",
+            "6 months",
+            "30% advance",
+            "quote p.3",
+            "VERIFIED",
+        ),
+        CommercialValue(
+            "Vendor B",
+            "invalid",
+            "USD",
+            "TBD",
+            "12 months",
+            "LC at sight",
+            "",
+            "UNVERIFIED",
+        ),
+    ])
+
+    assert rows[0]["price"] == 10500.0
+    assert rows[0]["currency"] == "USD"
+    assert rows[0]["lead_time_weeks"] == 14.0
+    assert rows[0]["warranty_months"] == 6.0
+    assert rows[0]["payment_terms"] == "30% advance"
+    assert rows[0]["flags"] == ["CURRENCY_NORMALIZATION_REVIEW", "LEAD_TIME_REVIEW", "WARRANTY_REVIEW"]
+    assert rows[0]["review_required"] is True
+
+    assert rows[1]["price"] is None
+    assert rows[1]["lead_time_weeks"] is None
+    assert rows[1]["warranty_months"] == 12.0
+    assert rows[1]["flags"] == [
+        "EVIDENCE_REVIEW",
+        "PRICE_FORMAT_REVIEW",
+        "LEAD_TIME_FORMAT_REVIEW",
+    ]
+    assert rows[1]["review_required"] is True
+
+
+def test_commercial_risk_review_does_not_rank_or_select_vendors() -> None:
+    from freellmpool.industrial import CommercialValue, build_report
+
+    report = build_report(
+        [Requirement("R-01", "Rated voltage", "415 V")],
+        [VendorValue("Vendor A", "Rated voltage", "415 V", "quote p.1", "VERIFIED")],
+        [
+            CommercialValue("Vendor A", "10000", "USD", "8 weeks", "24 months", "30% advance", "quote p.3", "VERIFIED"),
+            CommercialValue("Vendor B", "9000", "USD", "10 weeks", "18 months", "LC at sight", "quote p.3", "VERIFIED"),
+        ],
+    )
+
+    risk_review = report["commercial_risk_review"]
+    assert len(risk_review) == 2
+    assert all("rank" not in row and "winner" not in row for row in risk_review)
+    assert [row["vendor"] for row in risk_review] == ["Vendor A", "Vendor B"]

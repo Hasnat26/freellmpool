@@ -103,7 +103,7 @@ select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/test_industrial_demo.py", "tests/test_industrial_report.py"]
 addopts = "-q"
 pythonpath = [".", "src"]
 

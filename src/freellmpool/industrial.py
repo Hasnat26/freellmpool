@@ -217,11 +217,13 @@ def build_matrix(
 def build_report(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
+    commercial_data: Sequence[CommercialValue] | None = None,
 ) -> dict[str, object]:
     """Return a machine-readable RFQ review report."""
 
     reqs = _normalise_requirements(requirements)
     values = _normalise_vendor_data(vendor_data)
+    commercial = tuple(commercial_data or ())
     matrix = build_matrix(reqs, values)
     deviations = [row for row in matrix if row["status"] == "DEVIATION"]
     unverified = [row for row in matrix if row["status"] == "UNVERIFIED"]
@@ -240,8 +242,10 @@ def build_report(
             "matrix_rows": len(matrix),
             "deviations": len(deviations),
             "unverified_fields": len(unverified),
+            "commercial_records": len(commercial),
         },
         "matrix": matrix,
+        "commercial_comparison": [asdict(item) for item in commercial],
         "review_actions": [
             {
                 "vendor": row["vendor"],
@@ -367,7 +371,8 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
             json.dump(payload, handle, ensure_ascii=False)
             temp_path = Path(handle.name)
-        return load_rfq_input(temp_path)
+        requirements, vendor_data, _commercial = load_rfq_input(temp_path)
+        return requirements, vendor_data
     finally:
         if temp_path is not None:
             temp_path.unlink(missing_ok=True)

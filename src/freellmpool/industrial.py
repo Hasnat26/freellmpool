@@ -12,7 +12,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, Sequence, cast
 
-RFQ_SCHEMA_VERSION = "1.0"\n\nClaimStatus = Literal[
+RFQ_SCHEMA_VERSION = "1.0"
+SUPPORTED_RFQ_SCHEMA_VERSIONS = frozenset({RFQ_SCHEMA_VERSION})
+
+ClaimStatus = Literal[
     "VERIFIED",
     "PARTIALLY VERIFIED",
     "UNVERIFIED",
@@ -23,6 +26,17 @@ RFQ_SCHEMA_VERSION = "1.0"\n\nClaimStatus = Literal[
 
 
 @dataclass(frozen=True)
+@dataclass(frozen=True)
+class EvidenceProvenance:
+    """Normalized source location for an extracted claim."""
+
+    source: str
+    page: int | None = None
+    section: str | None = None
+    table: str | None = None
+    cell: str | None = None
+
+
 class Requirement:
     tag: str
     parameter: str
@@ -36,6 +50,7 @@ class VendorValue:
     value: str
     evidence: str
     claim_status: ClaimStatus = "UNVERIFIED"
+    provenance: EvidenceProvenance | None = None
 
 
 @dataclass(frozen=True)
@@ -48,6 +63,7 @@ class CommercialValue:
     payment_terms: str
     evidence: str
     claim_status: ClaimStatus = "UNVERIFIED"
+    provenance: EvidenceProvenance | None = None
 
 
 DEFAULT_REQUIREMENTS: tuple[Requirement, ...] = (
@@ -81,12 +97,29 @@ def _normalise_vendor_data(
     return tuple(vendor_data or DEFAULT_VENDOR_DATA)
 
 
-def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValue], list[CommercialValue]]:
-    """Load and strictly validate a versioned structured RFQ JSON input file.
+def _parse_provenance(item: dict[str, object], location: str) -> EvidenceProvenance | None:
+    raw = item.get("provenance")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"{location}.provenance must be an object when provided")
+    source = raw.get("source")
+    if not isinstance(source, str) or not source.strip():
+        raise ValueError(f"{location}.provenance.source must be a non-empty string")
+    page = raw.get("page")
+    if page is not None and (not isinstance(page, int) or isinstance(page, bool) or page < 1):
+        raise ValueError(f"{location}.provenance.page must be a positive integer or null")
+    values: dict[str, object] = {"source": source.strip(), "page": page}
+    for field in ("section", "table", "cell"):
+        value = raw.get(field)
+        if value is not None and not isinstance(value, str):
+            raise ValueError(f"{location}.provenance.{field} must be a string or null")
+        values[field] = value.strip() if isinstance(value, str) else None
+    return EvidenceProvenance(**values)
 
-    Pre-versioned fixtures default to schema 1.0 for backward compatibility.
-    Unsupported explicit versions fail closed.
-    """
+
+def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValue], list[CommercialValue]]:
+    """Load and strictly validate a versioned structured RFQ JSON input file."""
     input_path = Path(path)
     try:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
@@ -94,27 +127,20 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         raise ValueError(f"cannot read RFQ input '{input_path}': {exc}") from exc
     except json.JSONDecodeError as exc:
         raise ValueError(f"invalid RFQ JSON in '{input_path}': {exc.msg}") from exc
-
     if not isinstance(payload, dict):
         raise ValueError("RFQ input must be a JSON object")
-
     schema_version = payload.get("schema_version", RFQ_SCHEMA_VERSION)
     if not isinstance(schema_version, str) or not schema_version.strip():
         raise ValueError("RFQ input 'schema_version' must be a non-empty string")
     schema_version = schema_version.strip()
     if schema_version not in SUPPORTED_RFQ_SCHEMA_VERSIONS:
-        raise ValueError(
-            f"unsupported RFQ schema_version: {schema_version!r}; "
-            f"supported: {sorted(SUPPORTED_RFQ_SCHEMA_VERSIONS)}"
-        )
-
+        raise ValueError(f"unsupported RFQ schema_version: {schema_version!r}; supported: {sorted(SUPPORTED_RFQ_SCHEMA_VERSIONS)}")
     raw_requirements = payload.get("requirements")
     raw_vendor_data = payload.get("vendor_data")
     if not isinstance(raw_requirements, list) or not raw_requirements:
         raise ValueError("RFQ input requires a non-empty 'requirements' array")
     if not isinstance(raw_vendor_data, list) or not raw_vendor_data:
         raise ValueError("RFQ input requires a non-empty 'vendor_data' array")
-
     def _required_text(item: dict[str, object], field: str, location: str) -> str:
         if field not in item:
             raise ValueError(f"{location} missing field: {field}")
@@ -125,13 +151,11 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         if not value:
             raise ValueError(f"{location}.{field} must not be empty")
         return value
-
     def _optional_text(item: dict[str, object], field: str, location: str) -> str:
         value = item.get(field, "")
         if not isinstance(value, str):
             raise ValueError(f"{location}.{field} must be a string when provided")
         return value.strip()
-
     requirements: list[Requirement] = []
     requirement_tags: set[str] = set()
     for index, item in enumerate(raw_requirements):
@@ -146,7 +170,6 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
             raise ValueError(f"{location} duplicate requirement tag: {tag!r}")
         requirement_tags.add(tag_key)
         requirements.append(Requirement(tag, parameter, required))
-
     allowed_statuses = {"VERIFIED", "PARTIALLY VERIFIED", "UNVERIFIED", "INFERENCE", "ASSUMPTION", "CONTRADICTED"}
     vendor_data: list[VendorValue] = []
     exact_vendor_claims: set[tuple[str, str, str, str]] = set()
@@ -158,25 +181,22 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         parameter = _required_text(item, "parameter", location)
         value = _required_text(item, "value", location)
         evidence = _optional_text(item, "evidence", location)
+        provenance = _parse_provenance(item, location)
         raw_status = item.get("claim_status", "UNVERIFIED")
         if not isinstance(raw_status, str):
             raise ValueError(f"{location}.claim_status must be a string")
         claim_status = raw_status.strip().upper()
         if not evidence:
             claim_status = "UNVERIFIED"
+        if claim_status == "VERIFIED" and provenance is None:
+            raise ValueError(f"{location} VERIFIED claims require provenance")
         if claim_status not in allowed_statuses:
             raise ValueError(f"{location} invalid claim_status: {claim_status!r}")
-        duplicate_key = (
-            vendor.casefold(),
-            _normalise_parameter(parameter),
-            _normalise_value(value),
-            evidence.casefold(),
-        )
+        duplicate_key = (vendor.casefold(), _normalise_parameter(parameter), _normalise_value(value), evidence.casefold())
         if duplicate_key in exact_vendor_claims:
             raise ValueError(f"{location} duplicates an existing vendor claim")
         exact_vendor_claims.add(duplicate_key)
-        vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status)))
-
+        vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status), provenance))
     raw_commercial = payload.get("commercial_data", [])
     if not isinstance(raw_commercial, list):
         raise ValueError("RFQ input 'commercial_data' must be an array when provided")
@@ -193,18 +213,18 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
             raise ValueError(f"{location} duplicates commercial data for vendor {values['vendor']!r}")
         commercial_vendors.add(vendor_key)
         evidence = _optional_text(item, "evidence", location)
+        provenance = _parse_provenance(item, location)
         raw_status = item.get("claim_status", "UNVERIFIED")
         if not isinstance(raw_status, str):
             raise ValueError(f"{location}.claim_status must be a string")
         claim_status = raw_status.strip().upper()
         if not evidence:
             claim_status = "UNVERIFIED"
+        if claim_status == "VERIFIED" and provenance is None:
+            raise ValueError(f"{location} VERIFIED claims require provenance")
         if claim_status not in allowed_statuses:
             raise ValueError(f"{location} invalid claim_status: {claim_status!r}")
-        commercial_data.append(
-            CommercialValue(**values, evidence=evidence, claim_status=cast(ClaimStatus, claim_status))
-        )
-
+        commercial_data.append(CommercialValue(**values, evidence=evidence, claim_status=cast(ClaimStatus, claim_status), provenance=provenance))
     return requirements, vendor_data, commercial_data
 
 
@@ -484,11 +504,23 @@ def build_matrix(
 
 
 
+def _provenance_fields(provenance: EvidenceProvenance | None) -> dict[str, str]:
+    if provenance is None:
+        return {"source": "", "page": "", "section": "", "table": "", "cell": ""}
+    return {
+        "source": provenance.source,
+        "page": "" if provenance.page is None else str(provenance.page),
+        "section": provenance.section or "",
+        "table": provenance.table or "",
+        "cell": provenance.cell or "",
+    }
+
+
 def build_evidence_register(requirements: Sequence[Requirement], vendor_data: Sequence[VendorValue], commercial_data: Sequence[CommercialValue] = ()) -> list[dict[str, str]]:
     """Return a traceable evidence register for every supplied claim."""
     rows: list[dict[str, str]] = []
     for item in vendor_data:
-        rows.append({"source_type": "technical_quotation", "vendor": item.vendor, "field": item.parameter, "value": item.value, "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO"})
+        rows.append({"source_type": "technical_quotation", "vendor": item.vendor, "field": item.parameter, "value": item.value, "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO", **_provenance_fields(item.provenance)})
     for item in commercial_data:
         rows.append({"source_type": "commercial_quotation", "vendor": item.vendor, "field": "price / lead_time / warranty / payment_terms", "value": f"{item.price} {item.currency}; {item.lead_time}; {item.warranty}; {item.payment_terms}", "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO"})
     return rows
@@ -585,7 +617,10 @@ def write_report(report: dict[str, object], output: str | Path) -> None:
 
 
 __all__ = [
-    "RFQ_SCHEMA_VERSION",\n    "ClaimStatus",
+    "RFQ_SCHEMA_VERSION",
+    "SUPPORTED_RFQ_SCHEMA_VERSIONS",
+    "EvidenceProvenance",
+    "ClaimStatus",
     "DEFAULT_REQUIREMENTS",
     "DEFAULT_VENDOR_DATA",
     "Requirement",

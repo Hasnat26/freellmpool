@@ -384,3 +384,82 @@ def test_sample_rfq_is_reproducible_and_report_matches_fixture() -> None:
     assert report["matrix"][6]["status"] == "DEVIATION"
     assert report["matrix"][6]["vendor"] == "Vendor B"
     assert report["matrix"][6]["parameter"] == "Efficiency class"
+
+def test_invalid_claim_status_is_rejected(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    path = tmp_path / "invalid-status.json"
+    path.write_text(
+        json.dumps({
+            "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+            "vendor_data": [{
+                "vendor": "Vendor X",
+                "parameter": "Rated voltage",
+                "value": "415 V",
+                "evidence": "quote p.1",
+                "claim_status": "GUESS",
+            }],
+        }),
+        encoding="utf-8",
+    )
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "invalid claim_status" in str(exc)
+    else:
+        raise AssertionError("invalid claim_status was accepted")
+
+
+def test_malformed_json_is_rejected(tmp_path) -> None:
+    from freellmpool.industrial import load_rfq_input
+
+    path = tmp_path / "broken.json"
+    path.write_text("{not valid json", encoding="utf-8")
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "invalid RFQ JSON" in str(exc)
+    else:
+        raise AssertionError("malformed JSON was accepted")
+
+
+def test_empty_requirements_and_vendor_data_are_rejected(tmp_path) -> None:
+    import json
+    from freellmpool.industrial import load_rfq_input
+
+    cases = [
+        {"requirements": [], "vendor_data": [{"vendor": "Vendor X", "parameter": "Voltage", "value": "415 V"}]},
+        {"requirements": [{"tag": "R-01", "parameter": "Voltage", "required": "415 V"}], "vendor_data": []},
+    ]
+    for index, payload in enumerate(cases):
+        path = tmp_path / f"invalid-{index}.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        try:
+            load_rfq_input(path)
+        except ValueError as exc:
+            assert "non-empty" in str(exc)
+        else:
+            raise AssertionError("empty RFQ collection was accepted")
+
+
+def test_unsupported_numeric_units_do_not_silently_pass() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    matrix = build_matrix(
+        [Requirement("R-01", "Rated voltage", "415 V")],
+        [VendorValue("Vendor X", "Rated voltage", "415 psi", "quote p.1", "VERIFIED")],
+    )
+    assert matrix[0]["status"] == "DEVIATION"
+
+
+def test_unverified_claim_remains_reviewable_even_with_matching_value() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_report
+
+    report = build_report(
+        [Requirement("R-01", "Rated voltage", "415 V")],
+        [VendorValue("Vendor X", "Rated voltage", "415 V", "quote p.1", "UNVERIFIED")],
+    )
+    assert report["matrix"][0]["status"] == "COMPLIANT"
+    assert report["matrix"][0]["claim_status"] == "UNVERIFIED"
+    assert report["summary"]["claims_requiring_review"] == 1

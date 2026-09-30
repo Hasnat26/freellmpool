@@ -818,3 +818,5 @@ print(render_engineering_report(report))
 ```
 
 The report exposes the technical compliance matrix, commercial information, evidence register, engineer review actions, and explicit workflow controls. It does not rank vendors or make an autonomous procurement decision.
+
+A committed example report is available at `examples/industrial_rfq/sample_report.md`. From a structured RFQ JSON file, use `freellmpool industrial-rfq --input examples/industrial_rfq/sample_input.json --markdown` to render the recruiter-facing report.

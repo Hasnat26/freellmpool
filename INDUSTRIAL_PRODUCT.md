@@ -262,7 +262,7 @@ Implemented in the current repository:
 - LLM-assisted grounded extraction;
 - commercial-value extraction;
 - parameter alias normalization;
-- basic electrical unit normalization;
+- broader engineering-unit normalization (current, frequency, speed, torque, temperature, pressure, length, and mass);
 - engineering operators, ranges, and percentage tolerances;
 - deterministic compliance matrix;
 - evidence register;

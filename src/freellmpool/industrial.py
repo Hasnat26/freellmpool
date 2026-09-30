@@ -689,8 +689,8 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
         "vendor_data": [{"vendor": "Vendor A", "parameter": "Rated voltage",
                          "value": "415 V", "evidence": "Vendor A quotation, section 2",
-                         "claim_status": "VERIFIED"}],
-        "commercial_data": [{"vendor": "Vendor A", "price": "10000", "currency": "USD", "lead_time": "8 weeks", "warranty": "12 months", "payment_terms": "30% advance", "evidence": "Vendor A quotation, commercial section", "claim_status": "VERIFIED"}],
+                         "claim_status": "VERIFIED", "provenance": {"source": "Vendor A quotation", "page": 2, "section": "Technical data", "table": null, "cell": null}}],
+        "commercial_data": [{"vendor": "Vendor A", "price": "10000", "currency": "USD", "lead_time": "8 weeks", "warranty": "12 months", "payment_terms": "30% advance", "evidence": "Vendor A quotation, commercial section", "claim_status": "VERIFIED", "provenance": {"source": "Vendor A quotation", "page": null, "section": "Commercial", "table": null, "cell": null}}],
     }
     system = (
         "You are an engineering document extraction component. Extract only facts explicitly stated "

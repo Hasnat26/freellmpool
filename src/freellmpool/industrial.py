@@ -252,6 +252,28 @@ def _values_match(required: str, offered: str) -> bool:
     return _normalise_value(required) == _normalise_value(offered)
 
 
+def _matching_vendor_values(
+    values: Sequence[VendorValue],
+    vendor: str,
+    parameter: str,
+) -> list[VendorValue]:
+    """Return all claims for a vendor/parameter pair, preserving duplicates."""
+    normalised = _normalise_parameter(parameter)
+    return [
+        value
+        for value in values
+        if value.vendor == vendor and _normalise_parameter(value.parameter) == normalised
+    ]
+
+
+def _has_conflicting_values(items: Sequence[VendorValue]) -> bool:
+    """Detect materially different claims for the same vendor/parameter."""
+    if len(items) < 2:
+        return False
+    first = items[0].value
+    return any(not _values_match(first, item.value) for item in items[1:])
+
+
 def build_matrix(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
@@ -270,15 +292,8 @@ def build_matrix(
 
     for req in reqs:
         for vendor in vendors:
-            item = next(
-                (
-                    value
-                    for value in values
-                    if value.vendor == vendor
-                    and _normalise_parameter(value.parameter) == _normalise_parameter(req.parameter)
-                ),
-                None,
-            )
+            matches = _matching_vendor_values(values, vendor, req.parameter)
+            item = matches[0] if matches else None
             if item is None:
                 rows.append(
                     {
@@ -295,7 +310,28 @@ def build_matrix(
                 )
                 continue
 
+            if _has_conflicting_values(matches):
+                evidence = " | ".join(
+                    f"{match.evidence}: {match.value}" for match in matches if match.evidence
+                ) or "Conflicting quotation claims"
+                rows.append(
+                    {
+                        "requirement": req.tag,
+                        "vendor": vendor,
+                        "parameter": req.parameter,
+                        "required": req.required,
+                        "offered": "CONFLICTING",
+                        "status": "UNVERIFIED",
+                        "evidence": evidence,
+                        "claim_status": "CONTRADICTED",
+                    }
+                )
+                continue
+
             status = "COMPLIANT" if _values_match(item.value, req.required) else "DEVIATION"
+            claim_status = item.claim_status
+            if claim_status == "CONTRADICTED":
+                status = "UNVERIFIED"
             rows.append(
                 {
                     "requirement": req.tag,
@@ -305,7 +341,7 @@ def build_matrix(
                     "offered": item.value,
                     "status": status,
                     "evidence": item.evidence,
-                    "claim_status": item.claim_status,
+                    "claim_status": claim_status,
                 }
             )
 

@@ -1,0 +1,90 @@
+{
+  "benchmark_version": "1.0",
+  "purpose": "Representative evidence-aware benchmark for industrial RFQ extraction and deterministic comparison.",
+  "cases": [
+    {
+      "id": "TXT-01",
+      "source_format": "txt",
+      "scenario": "plain_text",
+      "description": "Plain-text motor RFQ with one compliant and one deviating vendor.",
+      "requirements": [
+        {"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"},
+        {"tag": "R-02", "parameter": "Motor power", "required": "75 kW"},
+        {"tag": "R-03", "parameter": "Efficiency class", "required": "IE3"}
+      ],
+      "vendor_data": [
+        {"vendor": "Vendor A", "parameter": "Rated voltage", "value": "0.415 kV", "evidence": "Vendor A quote p.1", "claim_status": "VERIFIED", "provenance": {"source": "vendor-a.txt", "page": 1, "section": "Technical data"}},
+        {"vendor": "Vendor A", "parameter": "Motor power", "value": "75 kW", "evidence": "Vendor A quote p.1", "claim_status": "VERIFIED", "provenance": {"source": "vendor-a.txt", "page": 1, "section": "Technical data"}},
+        {"vendor": "Vendor A", "parameter": "Efficiency class", "value": "IE3", "evidence": "Vendor A quote p.2", "claim_status": "VERIFIED", "provenance": {"source": "vendor-a.txt", "page": 2, "section": "Motor data"}},
+        {"vendor": "Vendor B", "parameter": "Rated voltage", "value": "415 V", "evidence": "Vendor B quote p.1", "claim_status": "VERIFIED", "provenance": {"source": "vendor-b.txt", "page": 1, "section": "Technical data"}},
+        {"vendor": "Vendor B", "parameter": "Motor power", "value": "75 kW", "evidence": "Vendor B quote p.1", "claim_status": "VERIFIED", "provenance": {"source": "vendor-b.txt", "page": 1, "section": "Technical data"}},
+        {"vendor": "Vendor B", "parameter": "Efficiency class", "value": "IE2", "evidence": "Vendor B quote p.2", "claim_status": "VERIFIED", "provenance": {"source": "vendor-b.txt", "page": 2, "section": "Motor data"}}
+      ],
+      "expected_statuses": ["COMPLIANT", "COMPLIANT", "COMPLIANT", "COMPLIANT", "COMPLIANT", "DEVIATION"]
+    },
+    {
+      "id": "PDF-02",
+      "source_format": "pdf",
+      "scenario": "page_aware_pdf_text",
+      "description": "Page-aware PDF extraction fixture represented after text extraction; provenance must retain source and page.",
+      "requirements": [
+        {"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"},
+        {"tag": "R-02", "parameter": "Frequency", "required": "50 Hz"},
+        {"tag": "R-03", "parameter": "Rated current", "required": "100 A"}
+      ],
+      "vendor_data": [
+        {"vendor": "Vendor PDF", "parameter": "Rated voltage", "value": "0.415 kV", "evidence": "vendor-pdf.pdf p.3", "claim_status": "VERIFIED", "provenance": {"source": "vendor-pdf.pdf", "page": 3, "section": "Nameplate"}},
+        {"vendor": "Vendor PDF", "parameter": "Frequency", "value": "50 Hz", "evidence": "vendor-pdf.pdf p.3", "claim_status": "VERIFIED", "provenance": {"source": "vendor-pdf.pdf", "page": 3, "section": "Nameplate"}},
+        {"vendor": "Vendor PDF", "parameter": "Rated current", "value": "98 A", "evidence": "vendor-pdf.pdf p.3", "claim_status": "VERIFIED", "provenance": {"source": "vendor-pdf.pdf", "page": 3, "section": "Nameplate"}}
+      ],
+      "expected_statuses": ["COMPLIANT", "COMPLIANT", "DEVIATION"]
+    },
+    {
+      "id": "TABLE-03",
+      "source_format": "table",
+      "scenario": "table_heavy",
+      "description": "Table-heavy quotation with engineering units, commercial data, and cell-level provenance.",
+      "requirements": [
+        {"tag": "R-01", "parameter": "Motor power", "required": "75 kW"},
+        {"tag": "R-02", "parameter": "Rated speed", "required": "1500 rpm"},
+        {"tag": "R-03", "parameter": "Ingress protection", "required": "IP55"}
+      ],
+      "vendor_data": [
+        {"vendor": "Table Vendor", "parameter": "Motor power", "value": "75000 W", "evidence": "quote.pdf p.4 table T-01 cell B7", "claim_status": "VERIFIED", "provenance": {"source": "quote.pdf", "page": 4, "section": "Technical schedule", "table": "T-01", "cell": "B7"}},
+        {"vendor": "Table Vendor", "parameter": "Rated speed", "value": "1500 r/min", "evidence": "quote.pdf p.4 table T-01 cell B9", "claim_status": "VERIFIED", "provenance": {"source": "quote.pdf", "page": 4, "section": "Technical schedule", "table": "T-01", "cell": "B9"}},
+        {"vendor": "Table Vendor", "parameter": "Ingress protection", "value": "IP55", "evidence": "quote.pdf p.4 table T-01 cell B11", "claim_status": "VERIFIED", "provenance": {"source": "quote.pdf", "page": 4, "section": "Technical schedule", "table": "T-01", "cell": "B11"}}
+      ],
+      "expected_statuses": ["COMPLIANT", "COMPLIANT", "COMPLIANT"]
+    },
+    {
+      "id": "AMB-04",
+      "source_format": "text",
+      "scenario": "ambiguous",
+      "description": "Vendor wording is non-computable and must remain reviewable rather than being inferred.",
+      "requirements": [
+        {"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"},
+        {"tag": "R-02", "parameter": "Motor power", "required": "75 kW"}
+      ],
+      "vendor_data": [
+        {"vendor": "Ambiguous Vendor", "parameter": "Rated voltage", "value": "approximately 415 V", "evidence": "quote p.2", "claim_status": "UNVERIFIED", "provenance": {"source": "ambiguous-quote.txt", "page": 2, "section": "Technical data"}},
+        {"vendor": "Ambiguous Vendor", "parameter": "Motor power", "value": "as per datasheet", "evidence": "quote p.2", "claim_status": "UNVERIFIED", "provenance": {"source": "ambiguous-quote.txt", "page": 2, "section": "Technical data"}}
+      ],
+      "expected_statuses": ["DEVIATION", "DEVIATION"]
+    },
+    {
+      "id": "CON-05",
+      "source_format": "text",
+      "scenario": "contradictory",
+      "description": "Two conflicting quotation claims for one parameter must produce an unverified contradicted result.",
+      "requirements": [
+        {"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}
+      ],
+      "vendor_data": [
+        {"vendor": "Contradictory Vendor", "parameter": "Rated voltage", "value": "415 V", "evidence": "quote p.1", "claim_status": "VERIFIED", "provenance": {"source": "contradictory-quote.pdf", "page": 1, "section": "Cover"}},
+        {"vendor": "Contradictory Vendor", "parameter": "Nominal voltage", "value": "400 V", "evidence": "quote p.6", "claim_status": "VERIFIED", "provenance": {"source": "contradictory-quote.pdf", "page": 6, "section": "Technical schedule"}}
+      ],
+      "expected_statuses": ["UNVERIFIED"],
+      "expected_claim_statuses": ["CONTRADICTED"]
+    }
+  ]
+}

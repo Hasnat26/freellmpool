@@ -71,6 +71,7 @@ Important claims are associated with evidence and a claim status:
 The workflow is designed so that unsupported information remains visible for engineering review rather than silently becoming an accepted fact.
 
 **Claim-status rule:** if `claim_status` is omitted from structured vendor or commercial input, it defaults to `UNVERIFIED`. A claim is `VERIFIED` only when the input explicitly marks it as verified; the built-in demo dataset uses explicit `VERIFIED` statuses. This prevents missing provenance metadata from being silently treated as verified evidence.
+If an evidence field is omitted or empty, the claim is accepted structurally but is forced to `UNVERIFIED` and therefore requires review. The same rule applies to technical vendor claims and commercial claims.
 
 For document-based extraction, source and page markers are preserved so an extracted vendor value can be traced back to the originating document page.
 

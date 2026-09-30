@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, Sequence, cast
 
-ClaimStatus = Literal[
+RFQ_SCHEMA_VERSION = "1.0"\n\nClaimStatus = Literal[
     "VERIFIED",
     "PARTIALLY VERIFIED",
     "UNVERIFIED",
@@ -538,7 +538,7 @@ def write_report(report: dict[str, object], output: str | Path) -> None:
 
 
 __all__ = [
-    "ClaimStatus",
+    "RFQ_SCHEMA_VERSION",\n    "ClaimStatus",
     "DEFAULT_REQUIREMENTS",
     "DEFAULT_VENDOR_DATA",
     "Requirement",

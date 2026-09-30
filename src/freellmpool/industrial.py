@@ -782,6 +782,7 @@ __all__ = [
     "document_text",
     "build_matrix",
     "build_evidence_register",
+    "build_commercial_risk_review",
     "build_report",
     "load_rfq_input",
     "extract_rfq_with_llm",

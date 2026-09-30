@@ -213,6 +213,38 @@ def test_parameter_alias_and_unit_normalization() -> None:
     assert matrix[0]["offered_parameter"] == "Nominal voltage"
 
 
+def test_broader_engineering_unit_normalization() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    cases = [
+        ("Current", "1 kA", "1000 A"),
+        ("Frequency", "50 Hz", "0.05 kHz"),
+        ("Speed", "1500 rpm", "1500 rpm"),
+        ("Torque", "1 kNm", "1000 Nm"),
+        ("Temperature", "40 °C", "40 C"),
+        ("Pressure", "1 MPa", "10 bar"),
+        ("Length", "1 m", "1000 mm"),
+        ("Mass", "1 t", "1000 kg"),
+    ]
+
+    for parameter, required, offered in cases:
+        matrix = build_matrix(
+            [Requirement("R-01", parameter, required)],
+            [VendorValue("Vendor X", parameter, offered, "quote p.1", "VERIFIED")],
+        )
+        assert matrix[0]["status"] == "COMPLIANT"
+
+
+def test_broader_engineering_unit_mismatch_is_deviation() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    matrix = build_matrix(
+        [Requirement("R-01", "Pressure", "1 MPa")],
+        [VendorValue("Vendor X", "Pressure", "9 bar", "quote p.1", "VERIFIED")],
+    )
+    assert matrix[0]["status"] == "DEVIATION"
+
+
 def test_engineering_operators_ranges_and_tolerance() -> None:
     from freellmpool.industrial import Requirement, VendorValue, build_matrix
 

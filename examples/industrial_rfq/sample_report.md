@@ -30,13 +30,29 @@ This report is an evidence-aware engineering review. It does not select a suppli
 | Vendor A | 10000 | USD | 8 weeks | 24 months | 30% advance, 70% before shipment | VERIFIED | Quotation p.3 |
 | Vendor B | 9200 | USD | 12 weeks | 12 months | 50% advance, 50% before shipment | VERIFIED | Quotation p.3 |
 
+## Evidence register
+
+| Source | Vendor | Field | Value | Claim status | Review | Evidence |
+|---|---|---|---|---|---|---|
+| technical_quotation | Vendor A | Nominal voltage | 0.415 kV | VERIFIED | NO | Quotation p.1 |
+| technical_quotation | Vendor A | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 |
+| technical_quotation | Vendor A | Efficiency class | IE3 | VERIFIED | NO | Quotation p.2 |
+| technical_quotation | Vendor A | Ingress protection | IP55 | VERIFIED | NO | Quotation p.2 |
+| technical_quotation | Vendor B | Rated voltage | 415 V | VERIFIED | NO | Quotation p.1 |
+| technical_quotation | Vendor B | Motor power | 75 kW | VERIFIED | NO | Quotation p.1 |
+| technical_quotation | Vendor B | Efficiency class | IE2 | VERIFIED | NO | Quotation p.2 |
+| technical_quotation | Vendor B | Ingress protection | IP55 | VERIFIED | NO | Quotation p.2 |
+| commercial_quotation | Vendor A | price / lead_time / warranty / payment_terms | 10000 USD; 8 weeks; 24 months; 30% advance, 70% before shipment | VERIFIED | NO | Quotation p.3 |
+| commercial_quotation | Vendor B | price / lead_time / warranty / payment_terms | 9200 USD; 12 weeks; 12 months; 50% advance, 50% before shipment | VERIFIED | NO | Quotation p.3 |
+
 ## Engineer review actions
 
 - **Vendor B / Efficiency class**: offered `IE2`, required `IE3`. Verify against source evidence: Quotation p.2.
 
-## Controls
+## Controls and limitations
 
-- LLM output is extraction assistance only.
+- LLM output is treated as extraction assistance, not as the compliance decision.
 - Compliance status is calculated by the deterministic comparison engine.
-- Missing or unsupported claims remain reviewable.
-- Commercial data is presented for review; no automatic supplier winner is selected.
+- Missing or unsupported claims remain reviewable rather than being silently inferred.
+- Commercial fields are presented for review; no automatic winner is selected.
+

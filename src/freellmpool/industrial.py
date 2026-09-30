@@ -35,7 +35,7 @@ class VendorValue:
     parameter: str
     value: str
     evidence: str
-    claim_status: ClaimStatus = "VERIFIED"
+    claim_status: ClaimStatus = "UNVERIFIED"
 
 
 @dataclass(frozen=True)
@@ -127,7 +127,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         parameter = str(item["parameter"]).strip()
         value = str(item["value"]).strip()
         evidence = str(item["evidence"]).strip()
-        claim_status = str(item.get("claim_status", "VERIFIED")).strip().upper()
+        claim_status = str(item.get("claim_status", "UNVERIFIED")).strip().upper()
         if not vendor or not parameter or not value or not evidence:
             raise ValueError(f"vendor_data[{index}] required fields must not be empty")
         if claim_status not in allowed_statuses:
@@ -146,7 +146,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         if missing:
             raise ValueError(f"commercial_data[{index}] missing field: {missing}")
         values = {field: str(item[field]).strip() for field in commercial_fields}
-        claim_status = str(item.get("claim_status", "VERIFIED")).strip().upper()
+        claim_status = str(item.get("claim_status", "UNVERIFIED")).strip().upper()
         if any(not values[field] for field in commercial_fields):
             raise ValueError(f"commercial_data[{index}] required fields must not be empty")
         if claim_status not in allowed_statuses:

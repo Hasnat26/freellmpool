@@ -579,6 +579,102 @@ def build_evidence_register(requirements: Sequence[Requirement], vendor_data: Se
         rows.append({"source_type": "commercial_quotation", "vendor": item.vendor, "field": "price / lead_time / warranty / payment_terms", "value": f"{item.price} {item.currency}; {item.lead_time}; {item.warranty}; {item.payment_terms}", "evidence": item.evidence, "claim_status": item.claim_status, "review_required": "YES" if item.claim_status != "VERIFIED" else "NO"})
     return rows
 
+_COMMERCIAL_LEAD_TIME_REVIEW_WEEKS = 12.0
+_COMMERCIAL_WARRANTY_REVIEW_MONTHS = 12.0
+
+
+def _normalise_commercial_price(price: str) -> float | None:
+    import re
+
+    cleaned = price.strip().replace(",", "").replace("$", "").replace("€", "").replace("£", "")
+    if not re.fullmatch(r"\d+(?:\.\d+)?", cleaned):
+        return None
+    return float(cleaned)
+
+
+def _normalise_commercial_lead_time(lead_time: str) -> float | None:
+    import re
+
+    match = re.fullmatch(
+        r"(\d+(?:\.\d+)?)\s*(day|days|d|week|weeks|w|month|months|m)",
+        lead_time.strip().casefold(),
+    )
+    if not match:
+        return None
+    value = float(match.group(1))
+    unit = match.group(2)
+    if unit in {"day", "days", "d"}:
+        return value / 7.0
+    if unit in {"month", "months", "m"}:
+        return value * 4.345
+    return value
+
+
+def _normalise_warranty_months(warranty: str) -> float | None:
+    import re
+
+    match = re.fullmatch(
+        r"(\d+(?:\.\d+)?)\s*(month|months|mo|year|years|yr|y)",
+        warranty.strip().casefold(),
+    )
+    if not match:
+        return None
+    value = float(match.group(1))
+    unit = match.group(2)
+    return value * 12.0 if unit in {"year", "years", "yr", "y"} else value
+
+
+def _commercial_risk_flags(item: CommercialValue) -> list[str]:
+    """Return review flags without ranking vendors or selecting a supplier."""
+    flags: list[str] = []
+    if not item.evidence or item.claim_status != "VERIFIED":
+        flags.append("EVIDENCE_REVIEW")
+    if _normalise_commercial_price(item.price) is None:
+        flags.append("PRICE_FORMAT_REVIEW")
+    if not item.currency.strip() or item.currency.strip().upper() != item.currency.strip():
+        flags.append("CURRENCY_NORMALIZATION_REVIEW")
+    lead_time_weeks = _normalise_commercial_lead_time(item.lead_time)
+    if lead_time_weeks is None:
+        flags.append("LEAD_TIME_FORMAT_REVIEW")
+    elif lead_time_weeks > _COMMERCIAL_LEAD_TIME_REVIEW_WEEKS:
+        flags.append("LEAD_TIME_REVIEW")
+    warranty_months = _normalise_warranty_months(item.warranty)
+    if warranty_months is None:
+        flags.append("WARRANTY_FORMAT_REVIEW")
+    elif warranty_months < _COMMERCIAL_WARRANTY_REVIEW_MONTHS:
+        flags.append("WARRANTY_REVIEW")
+    if not item.payment_terms.strip():
+        flags.append("PAYMENT_TERMS_REVIEW")
+    return flags
+
+
+def build_commercial_risk_review(
+    commercial_data: Sequence[CommercialValue],
+) -> list[dict[str, object]]:
+    """Normalize commercial fields and expose exception flags for review."""
+    rows: list[dict[str, object]] = []
+    for item in commercial_data:
+        price = _normalise_commercial_price(item.price)
+        lead_time_weeks = _normalise_commercial_lead_time(item.lead_time)
+        warranty_months = _normalise_warranty_months(item.warranty)
+        flags = _commercial_risk_flags(item)
+        rows.append(
+            {
+                "vendor": item.vendor,
+                "price": price,
+                "currency": item.currency.strip().upper(),
+                "lead_time_weeks": lead_time_weeks,
+                "warranty_months": warranty_months,
+                "payment_terms": " ".join(item.payment_terms.split()),
+                "claim_status": item.claim_status,
+                "evidence": item.evidence,
+                "flags": flags,
+                "review_required": bool(flags),
+            }
+        )
+    return rows
+
+
 def build_report(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
@@ -615,6 +711,7 @@ def build_report(
         },
         "matrix": matrix,
         "commercial_comparison": [asdict(item) for item in commercial],
+        "commercial_risk_review": build_commercial_risk_review(commercial),
         "evidence_register": evidence_register,
         "review_actions": [
             {

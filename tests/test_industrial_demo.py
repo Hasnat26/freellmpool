@@ -186,3 +186,38 @@ def test_document_ingestion_rejects_unsupported_type(tmp_path) -> None:
         assert "unsupported document type" in str(exc)
     else:
         raise AssertionError("unsupported document type was accepted")
+
+
+def test_document_rfq_extraction_passes_provenance_to_llm() -> None:
+    from freellmpool.industrial import extract_rfq_documents_with_llm
+
+    class FakeReply:
+        text = '{"requirements":[{"tag":"R-01","parameter":"Rated voltage","required":"415 V"}],"vendor_data":[{"vendor":"Vendor X","parameter":"Rated voltage","value":"415 V","evidence":"vendor_quote.txt | PAGE: 1","claim_status":"VERIFIED"}],"commercial_data":[]}'
+
+    class FakePool:
+        def __init__(self):
+            self.prompt = None
+
+        def ask(self, prompt, **kwargs):
+            self.prompt = prompt
+            return FakeReply()
+
+    rfq = tmp_path = __import__("pathlib").Path("tests") / "_rfq_m7_temp.txt"
+    quote = __import__("pathlib").Path("tests") / "_quote_m7_temp.txt"
+    try:
+        rfq.write_text("Required rated voltage: 415 V", encoding="utf-8")
+        quote.write_text("Rated voltage: 415 V", encoding="utf-8")
+        pool = FakePool()
+        requirements, vendor_data, commercial = extract_rfq_documents_with_llm(
+            pool,
+            rfq,
+            [{"vendor": "Vendor X", "path": quote}],
+        )
+        assert "[SOURCE:" in pool.prompt
+        assert "PAGE: 1" in pool.prompt
+        assert requirements[0].required == "415 V"
+        assert vendor_data[0].evidence == "vendor_quote.txt | PAGE: 1"
+        assert commercial == []
+    finally:
+        rfq.unlink(missing_ok=True)
+        quote.unlink(missing_ok=True)

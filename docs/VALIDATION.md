@@ -16,6 +16,8 @@ The obsolete MCP manifest validation job was removed because the repository no l
 
 ## Current verification status
 
+P3-M7 verification refresh: CI is expected to run on pushes to `main` and pull requests targeting `main`.
+
 The validation commands are configured in GitHub Actions, but this environment has not independently executed the repository test suite.
 
 The GitHub Actions API currently reports no workflow runs for the repository. Therefore this milestone does **not** claim that pytest, Ruff, mypy, or the CLI smoke tests have passed on GitHub.

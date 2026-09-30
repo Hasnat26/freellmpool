@@ -787,7 +787,7 @@ The model is used only to extract explicitly stated engineering facts. The deter
 
 Commercial fields are kept separate from technical compliance and currently capture price, currency, lead time, warranty, payment terms, evidence, and claim status. The workflow reports these fields for engineer/commercial review; it does not select a winning vendor or make an unattended procurement decision.
 
-For real engineering documents, `freellmpool industrial-document <file.pdf>` extracts PDF text with source/page markers. TXT and Markdown are supported as well. Those markers are preserved so later LLM extraction can cite the original quotation page instead of producing an untraceable summary.
+For real engineering documents, `freellmpool industrial-document <file.pdf>` extracts PDF text with source/page markers. TXT and Markdown are supported as well. Those markers are preserved so later LLM extraction can cite the original quotation page instead of producing an untraceable summary. The document workflow can now pass the extracted RFQ and vendor quotation text directly into the same evidence-aware LLM extraction and validation path.
 
 The input format is documented by the sample file: requirements are explicit engineering criteria, while each vendor value must carry quotation evidence and an evidence status.
 

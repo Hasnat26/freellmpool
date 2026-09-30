@@ -30,6 +30,15 @@ This report is an evidence-aware engineering review. It does not select a suppli
 | Vendor A | 10000 | USD | 8 weeks | 24 months | 30% advance, 70% before shipment | VERIFIED | Quotation p.3 |
 | Vendor B | 9200 | USD | 12 weeks | 12 months | 50% advance, 50% before shipment | VERIFIED | Quotation p.3 |
 
+## Commercial risk review
+
+These are deterministic review flags, not supplier rankings or selection criteria.
+
+| Vendor | Price | Currency | Lead time (weeks) | Warranty (months) | Claim status | Flags | Review required |
+|---|---:|---|---:|---:|---|---|---|
+| Vendor A | 10000.0 | USD | 8.0 | 24.0 | VERIFIED | None | NO |
+| Vendor B | 9200.0 | USD | 12.0 | 12.0 | VERIFIED | None | NO |
+
 ## Evidence register
 
 | Source | Vendor | Field | Value | Claim status | Review | Evidence | Source file | Page | Section | Table | Cell |
@@ -55,4 +64,6 @@ This report is an evidence-aware engineering review. It does not select a suppli
 - Compliance status is calculated by the deterministic comparison engine.
 - Missing or unsupported claims remain reviewable rather than being silently inferred.
 - Commercial fields are presented for review; no automatic winner is selected.
+- Commercial risk flags are deterministic exception indicators; they are not supplier scores.
+- Evidence provenance identifies the source location when structured provenance is available.
 

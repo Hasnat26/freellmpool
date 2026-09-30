@@ -92,7 +92,7 @@ def test_llm_extraction_reuses_strict_validation() -> None:
         def ask(self, *args, **kwargs):
             return FakeReply()
 
-    requirements, vendor_data = extract_rfq_with_llm(
+    requirements, vendor_data, commercial = extract_rfq_with_llm(
         FakePool(),
         "Supply 415 V motor.",
         [{"vendor": "Vendor X", "text": "400 V motor.", "evidence_prefix": "Vendor X quotation"}],
@@ -100,6 +100,7 @@ def test_llm_extraction_reuses_strict_validation() -> None:
     assert requirements[0].required == "415 V"
     assert vendor_data[0].value == "400 V"
     assert vendor_data[0].evidence == "Vendor X quotation p.1"
+    assert commercial == []
 
 
 def test_load_rfq_input_includes_commercial_data(tmp_path) -> None:

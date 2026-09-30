@@ -124,7 +124,7 @@ The extraction layer is constrained to explicitly stated engineering facts and e
 PDF, TXT, and Markdown documents can be converted into page-aware text:
 
 ~~~bash
-freellmpool industrial-document specification.pdf
+industrial-rfq-intelligence industrial-document specification.pdf
 ~~~
 
 PDF extraction preserves source/page provenance. OCR for scanned/image-only documents is not yet part of the current implementation.
@@ -216,7 +216,7 @@ Implemented:
 - CLI JSON/Markdown output
 - automated test and CI configuration
 
-Planned hardening includes stricter claim-status defaults, contradiction handling, richer engineering operators/tolerances, OCR/table extraction, and expanded validation.
+Planned product work includes OCR/table extraction, broader document coverage, richer reporting, expanded engineering validation, and reviewer-oriented workflow interfaces.
 
 ## Engineering context
 

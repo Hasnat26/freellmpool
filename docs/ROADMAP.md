@@ -110,11 +110,11 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Require explicit human approval before REPORT.
 - [x] Exclude production credentials, autonomous procurement actions and unattended approval.
 
-### P3-M24 — Repository/public-surface cleanup
-- [ ] Audit remaining legacy gateway docs, HTML, issue templates, scripts and assets.
-- [ ] Remove/archive obsolete public material where safe.
-- [ ] Resolve stale binary social-preview/docs assets.
-- [ ] Recheck README, metadata, links and navigation.
+### P3-M24 — Repository/public-surface cleanup — DONE
+- [x] Audit legacy gateway/provider/MCP/SEO documentation, HTML, issue templates, scripts and assets.
+- [x] Remove obsolete legacy public material from the repository surface.
+- [x] Remove stale demo/social-preview/tokenmax binary assets tied to the legacy surface.
+- [x] Recheck the primary README/product documentation surface; retained `freellmpool` only where required for implementation compatibility.
 
 ### P3-M25 — Security/dependency gate
 - [ ] Verify Bandit, pip-audit and zizmor/security workflows.
@@ -151,5 +151,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M23 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M24.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M24 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M25.
 

@@ -244,7 +244,73 @@ def _numeric_unit(value: str) -> tuple[float, str] | None:
     canonical, multiplier = conversions[unit]
     return number * multiplier, canonical
 
+def _engineering_comparison(required: str, offered: str) -> bool | None:
+    """Evaluate supported numeric engineering operators and tolerances.
+
+    Returns None when the requirement is not a supported numeric expression,
+    allowing the caller to fall back to the existing exact normalized match.
+    """
+    import re
+
+    right = _numeric_unit(offered)
+    if right is None:
+        return None
+
+    expression = required.strip().replace("−", "-").replace("–", "-")
+    tolerance_match = re.fullmatch(
+        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)\\s*(?:±|\\+/-)\\s*(\\d+(?:\\.\\d+)?)\\s*%",
+        expression,
+    )
+    if tolerance_match:
+        nominal = _numeric_unit(f"{tolerance_match.group(1)} {tolerance_match.group(2)}")
+        if nominal is None or nominal[1] != right[1]:
+            return None
+        tolerance = float(tolerance_match.group(3)) / 100.0
+        lower = nominal[0] * (1.0 - tolerance)
+        upper = nominal[0] * (1.0 + tolerance)
+        return lower <= right[0] <= upper
+
+    range_match = re.fullmatch(
+        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)\\s*(?:to|\\-|\\.{2})\\s*"
+        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
+        expression,
+        flags=re.IGNORECASE,
+    )
+    if range_match:
+        low = _numeric_unit(f"{range_match.group(1)} {range_match.group(2)}")
+        high = _numeric_unit(f"{range_match.group(3)} {range_match.group(4)}")
+        if low is None or high is None or low[1] != high[1] or low[1] != right[1]:
+            return None
+        lower, upper = sorted((low[0], high[0]))
+        return lower <= right[0] <= upper
+
+    operator_match = re.fullmatch(
+        r"(>=|<=|>|<|=)?\\s*([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
+        expression,
+    )
+    if operator_match:
+        operator = operator_match.group(1) or "="
+        target = _numeric_unit(f"{operator_match.group(2)} {operator_match.group(3)}")
+        if target is None or target[1] != right[1]:
+            return None
+        if operator == ">=":
+            return right[0] >= target[0]
+        if operator == "<=":
+            return right[0] <= target[0]
+        if operator == ">":
+            return right[0] > target[0]
+        if operator == "<":
+            return right[0] < target[0]
+        return right[0] == target[0]
+
+    return None
+
+
 def _values_match(required: str, offered: str) -> bool:
+    comparison = _engineering_comparison(required, offered)
+    if comparison is not None:
+        return comparison
+
     left = _numeric_unit(required)
     right = _numeric_unit(offered)
     if left is not None and right is not None and left[1] == right[1]:

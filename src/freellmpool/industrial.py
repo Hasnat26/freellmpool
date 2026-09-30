@@ -38,6 +38,18 @@ class VendorValue:
     claim_status: ClaimStatus = "VERIFIED"
 
 
+@dataclass(frozen=True)
+class CommercialValue:
+    vendor: str
+    price: str
+    currency: str
+    lead_time: str
+    warranty: str
+    payment_terms: str
+    evidence: str
+    claim_status: ClaimStatus = "VERIFIED"
+
+
 DEFAULT_REQUIREMENTS: tuple[Requirement, ...] = (
     Requirement("R-01", "Rated voltage", "415 V"),
     Requirement("R-02", "Motor power", "75 kW"),
@@ -69,7 +81,7 @@ def _normalise_vendor_data(
     return tuple(vendor_data or DEFAULT_VENDOR_DATA)
 
 
-def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValue]]:
+def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValue], list[CommercialValue]]:
     """Load and strictly validate a structured RFQ JSON input file."""
     input_path = Path(path)
     try:
@@ -122,7 +134,26 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
             raise ValueError(f"vendor_data[${index}] invalid claim_status: ${claim_status!r}")
         vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status)))
 
-    return requirements, vendor_data
+    raw_commercial = payload.get("commercial_data", [])
+    if not isinstance(raw_commercial, list):
+        raise ValueError("RFQ input 'commercial_data' must be an array when provided")
+    commercial_data: list[CommercialValue] = []
+    commercial_fields = ("vendor", "price", "currency", "lead_time", "warranty", "payment_terms", "evidence")
+    for index, item in enumerate(raw_commercial):
+        if not isinstance(item, dict):
+            raise ValueError(f"commercial_data[{index}] must be an object")
+        missing = next((field for field in commercial_fields if field not in item), None)
+        if missing:
+            raise ValueError(f"commercial_data[{index}] missing field: {missing}")
+        values = {field: str(item[field]).strip() for field in commercial_fields}
+        claim_status = str(item.get("claim_status", "VERIFIED")).strip().upper()
+        if any(not values[field] for field in commercial_fields):
+            raise ValueError(f"commercial_data[{index}] required fields must not be empty")
+        if claim_status not in allowed_statuses:
+            raise ValueError(f"commercial_data[{index}] invalid claim_status: {claim_status!r}")
+        commercial_data.append(CommercialValue(**values, claim_status=cast(ClaimStatus, claim_status)))
+
+    return requirements, vendor_data, commercial_data
 
 
 def build_matrix(
@@ -271,6 +302,7 @@ __all__ = [
     "DEFAULT_VENDOR_DATA",
     "Requirement",
     "VendorValue",
+    "CommercialValue",
     "build_matrix",
     "build_report",
     "load_rfq_input",

@@ -47,6 +47,26 @@ def render_engineering_report(report: dict[str, Any], title: str = "Industrial R
                 f"{row['warranty']} | {row['payment_terms']} | {row['claim_status']} | {row['evidence']} |"
             )
 
+    risk_review = report.get("commercial_risk_review", [])
+    if risk_review:
+        lines += [
+            "",
+            "## Commercial risk review",
+            "",
+            "These are deterministic review flags, not supplier rankings or selection criteria.",
+            "",
+            "| Vendor | Price | Currency | Lead time (weeks) | Warranty (months) | Claim status | Flags | Review required |",
+            "|---|---:|---|---:|---:|---|---|---|",
+        ]
+        for row in risk_review:
+            flags = ", ".join(row["flags"]) if row["flags"] else "None"
+            lines.append(
+                f"| {row['vendor']} | {row['price']} | {row['currency']} | "
+                f"{row['lead_time_weeks']} | {row['warranty_months']} | "
+                f"{row['claim_status']} | {flags} | "
+                f"{'YES' if row['review_required'] else 'NO'} |"
+            )
+
     lines += ["", "## Evidence register", "", "| Source | Vendor | Field | Value | Claim status | Review | Evidence | Source file | Page | Section | Table | Cell |",
               "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for row in report["evidence_register"]:
@@ -74,6 +94,8 @@ def render_engineering_report(report: dict[str, Any], title: str = "Industrial R
         "- Compliance status is calculated by the deterministic comparison engine.",
         "- Missing or unsupported claims remain reviewable rather than being silently inferred.",
         "- Commercial fields are presented for review; no automatic winner is selected.",
+        "- Commercial risk flags are deterministic exception indicators; they are not supplier scores.",
+        "- Evidence provenance identifies the source location when structured provenance is available.",
         "",
     ]
     return "\n".join(lines)

@@ -906,3 +906,46 @@ def test_document_benchmark_covers_contradiction_and_ambiguous_cases() -> None:
     assert contradiction_result["status_accuracy"] == 1.0
     assert contradiction_result["claim_status_accuracy"] == 1.0
     assert ambiguous_result["status_accuracy"] == 1.0
+
+
+def test_reviewer_workflow_requires_explicit_human_approval() -> None:
+    from freellmpool.reviewer_workflow import ReviewSession, ReviewState
+
+    session = ReviewSession("demo").with_input("rfq.json")
+    assert session.state is ReviewState.UPLOAD
+
+    extraction = session.transition(ReviewState.EXTRACTION)
+    reviewed = extraction.transition(ReviewState.REVIEW, reference="extraction.json")
+    assert reviewed.extraction_reference == "extraction.json"
+    assert reviewed.human_approved is False
+
+    try:
+        reviewed.transition(ReviewState.REPORT, reference="report.md")
+    except ValueError as exc:
+        assert "explicit human approval" in str(exc)
+    else:
+        raise AssertionError("report transition bypassed human approval")
+
+    approved = reviewed.approve_review()
+    report = approved.transition(ReviewState.REPORT, reference="report.md")
+    assert report.state is ReviewState.REPORT
+    assert report.report_reference == "report.md"
+
+
+def test_reviewer_workflow_fails_closed_on_missing_input_and_invalid_transition() -> None:
+    from freellmpool.reviewer_workflow import ReviewSession, ReviewState
+
+    session = ReviewSession("demo")
+    try:
+        session.transition(ReviewState.EXTRACTION)
+    except ValueError as exc:
+        assert "input_reference" in str(exc)
+    else:
+        raise AssertionError("extraction started without input")
+
+    try:
+        session.transition(ReviewState.REPORT)
+    except ValueError as exc:
+        assert "invalid reviewer transition" in str(exc)
+    else:
+        raise AssertionError("invalid workflow transition was accepted")

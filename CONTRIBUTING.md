@@ -1,93 +1,38 @@
-# Contributing to freellmpool
+# Contributing to Industrial RFQ Intelligence
 
-Thanks for helping! The two highest-value contributions are **adding free
-providers** and **keeping the existing catalog accurate** as free tiers drift.
+Industrial RFQ Intelligence is an evidence-aware engineering decision-support prototype for technical and commercial review of industrial RFQs and vendor quotations.
 
-## Dev setup
+## Development setup
 
 ```bash
-git clone https://github.com/0xzr/freellmpool
-cd freellmpool
+git clone https://github.com/Hasnat26/industrial-rfq-intelligence
+cd industrial-rfq-intelligence
 python -m venv .venv && source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ruff check .
-pytest          # 0 network calls; provider traffic is faked
+pytest
 ```
 
-Focused loop while you are working:
+The primary product implementation is under `src/freellmpool/industrial.py` and `src/freellmpool/industrial_report.py`. The `freellmpool` package namespace is retained as an internal compatibility namespace; it is not the product identity.
+
+## Product contribution rules
+
+- Keep engineering compliance decisions deterministic and testable.
+- LLM-assisted extraction must remain separate from compliance judgment.
+- Missing or conflicting evidence must fail closed rather than silently pass.
+- Preserve source/provenance information whenever extracted claims enter the comparison layer.
+- Do not add autonomous procurement decisions, plant/control-system actions, or production credentials.
+- Add regression tests for new comparison, normalization, evidence, or report behavior.
+
+## Focused validation
 
 ```bash
 ruff check .
-pytest tests/test_cli.py              # or the smallest relevant test file
-scripts/check-counts                  # when README/docs count claims change
-python3 scripts/validate_catalog.py   # when providers.toml changes
+pytest
+python -m mypy --follow-imports=skip src/freellmpool/industrial.py src/freellmpool/industrial_report.py
+industrial-rfq-intelligence industrial-rfq --input examples/industrial_rfq/sample_input.json --json
+industrial-rfq-intelligence industrial-rfq --input examples/industrial_rfq/sample_input.json --markdown
 ```
 
-Useful release-readiness checks:
-
-```bash
-python3 scripts/stress_proxy.py --profile ci
-python3 scripts/check_release_ready.py --skip-build
-python3 scripts/check_release_ready.py
-```
-
-`stress_proxy.py` starts a local fake-backed proxy and sends mixed chat,
-streaming, embeddings, Responses, Anthropic Messages, transcription, models,
-and health traffic through the real HTTP server. `check_release_ready.py`
-cross-checks version/provider/model-count metadata; without `--skip-build` it
-also builds the sdist/wheel, runs `twine check`, and fresh-installs the wheel.
-
-Good first issue drafts live in [`docs/GOOD_FIRST_ISSUES.md`](docs/GOOD_FIRST_ISSUES.md).
-They include context, pointers, acceptance checks, labels, and the exact
-maintainer commands for filing them.
-
-## Adding a provider
-
-The whole catalog is [`src/freellmpool/providers.toml`](src/freellmpool/providers.toml).
-The scheduled discovery and protected-probe contract is documented in
-[`docs/CATALOG_SENTINEL.md`](docs/CATALOG_SENTINEL.md); sentinel output is
-advisory and never authorizes an automatic catalog mutation.
-Protocol-feature verification, bounded canary rules, and the exact-pin routing
-override are documented in
-[`docs/PROTOCOL_CONFORMANCE.md`](docs/PROTOCOL_CONFORMANCE.md).
-Most providers are OpenAI-compatible, so adding one is just a TOML block:
-
-```toml
-[[provider]]
-id = "myprovider"
-label = "My Provider"
-adapter = "openai"                       # "openai" | "gemini" | "cloudflare"
-base_url = "https://api.myprovider.ai/v1"
-key_env = "MYPROVIDER_API_KEY"           # env var the user sets; never a key
-models = [
-    { name = "some-model", rpd = 0 },    # rpd = free daily request hint, 0 = unknown
-]
-```
-
-Rules of thumb:
-
-- **Free tier only.** freellmpool is about free pools. If a provider needs a card
-  on file to use the tier, it doesn't belong in the default catalog.
-- **Never commit a key.** Only the *name* of the env var goes in the catalog.
-- If the provider isn't OpenAI-compatible, it needs a small adapter in
-  [`src/freellmpool/client.py`](src/freellmpool/client.py) (see the `gemini` one for
-  a ~30-line template) and a unit test in `tests/`.
-- Add the env var to [`.env.example`](.env.example) and the signup steps to
-  [`docs/ACCOUNTS.md`](docs/ACCOUNTS.md).
-
-## Fixing a stale limit or endpoint
-
-Free tiers change constantly. If a model name, base URL, or daily limit is
-wrong, a one-line PR to `providers.toml` is perfect and very welcome.
-
-## Tests
-
-Every code path is unit-tested without touching the network via an injected
-fake transport (`tests/helpers.py`). Please keep it that way — new behavior
-should come with a fake-backed test. Run `pytest` and `ruff check` before
-opening a PR.
-
-## Code of conduct
-
-Be kind. Assume good faith. We're all here to make free LLMs easier to use.
+Actual CI execution status is reported separately in `docs/VALIDATION.md`. Do not describe a configured workflow as a passed workflow without execution evidence.

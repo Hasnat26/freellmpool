@@ -1,8 +1,4 @@
-"""Backward-compatible entry point for the industrial RFQ demo.
-
-The implementation now lives in :mod:`freellmpool.industrial` so the workflow
-is part of the installable package as well as the repository demo.
-"""
+"""Standalone demo entry point for Industrial RFQ Intelligence.\n\nThe installable product CLI is ``industrial-rfq-intelligence``. This script is\nkept as a small backward-compatible demo launcher and delegates to the\nindustrial RFQ workflow without changing the package API.\n"""
 
 from __future__ import annotations
 

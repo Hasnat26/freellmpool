@@ -12,6 +12,8 @@ Given an RFQ/specification and 2–5 vendor quotations, the workflow can extract
 
 > **Important:** The LLM assists with extraction and grounded reading. It does **not** decide technical compliance. Compliance classification is performed by deterministic Python logic.
 
+The deterministic layer now supports numeric equality plus `>=`, `<=`, `>`, `<`, inclusive numeric ranges (`400-450 V` / `400 to 450 V`), and percentage tolerances (`415 V ±5%` or `415 V +/-5%`) when units are compatible. Unsupported expressions fall back to normalized exact matching rather than being guessed.
+
 ## What this project demonstrates
 
 - Industrial RFQ and quotation intelligence

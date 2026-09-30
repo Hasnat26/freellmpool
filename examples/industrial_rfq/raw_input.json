@@ -1,0 +1,15 @@
+{
+  "rfq": "Supply 75 kW, 415 V induction motors. Minimum efficiency IE3. Enclosure IP55.",
+  "quotations": [
+    {
+      "vendor": "Vendor A",
+      "evidence_prefix": "Vendor A quotation",
+      "text": "75 kW, 415 V, IE3 efficiency, IP55 enclosure."
+    },
+    {
+      "vendor": "Vendor B",
+      "evidence_prefix": "Vendor B quotation",
+      "text": "75 kW, 415 V, IE2 efficiency, IP55 enclosure."
+    }
+  ]
+}

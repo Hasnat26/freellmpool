@@ -58,14 +58,14 @@ DEFAULT_REQUIREMENTS: tuple[Requirement, ...] = (
 )
 
 DEFAULT_VENDOR_DATA: tuple[VendorValue, ...] = (
-    VendorValue("Vendor A", "Rated voltage", "415 V", "Quotation p.1"),
-    VendorValue("Vendor A", "Motor power", "75 kW", "Quotation p.1"),
-    VendorValue("Vendor A", "Efficiency class", "IE3", "Quotation p.2"),
-    VendorValue("Vendor A", "Ingress protection", "IP55", "Quotation p.2"),
-    VendorValue("Vendor B", "Rated voltage", "415 V", "Quotation p.1"),
-    VendorValue("Vendor B", "Motor power", "75 kW", "Quotation p.1"),
-    VendorValue("Vendor B", "Efficiency class", "IE2", "Quotation p.2"),
-    VendorValue("Vendor B", "Ingress protection", "IP55", "Quotation p.2"),
+    VendorValue("Vendor A", "Rated voltage", "415 V", "Quotation p.1", "VERIFIED"),
+    VendorValue("Vendor A", "Motor power", "75 kW", "Quotation p.1", "VERIFIED"),
+    VendorValue("Vendor A", "Efficiency class", "IE3", "Quotation p.2", "VERIFIED"),
+    VendorValue("Vendor A", "Ingress protection", "IP55", "Quotation p.2", "VERIFIED"),
+    VendorValue("Vendor B", "Rated voltage", "415 V", "Quotation p.1", "VERIFIED"),
+    VendorValue("Vendor B", "Motor power", "75 kW", "Quotation p.1", "VERIFIED"),
+    VendorValue("Vendor B", "Efficiency class", "IE2", "Quotation p.2", "VERIFIED"),
+    VendorValue("Vendor B", "Ingress protection", "IP55", "Quotation p.2", "VERIFIED"),
 )
 
 

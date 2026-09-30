@@ -207,7 +207,7 @@ Implemented:
 - LLM-assisted grounded extraction
 - commercial-field extraction
 - engineering parameter aliases
-- basic electrical unit normalization
+- broader engineering-unit normalization (A/kA, Hz, rpm, Nm, °C, pressure, length, mass)
 - deterministic compliance matrix
 - evidence register
 - PDF/TXT/Markdown text ingestion
@@ -216,7 +216,7 @@ Implemented:
 - CLI JSON/Markdown output
 - automated test and CI configuration
 
-Planned hardening includes stricter claim-status defaults, contradiction handling, richer engineering operators/tolerances, broader unit normalization, OCR/table extraction, and expanded validation.
+Planned hardening includes stricter claim-status defaults, contradiction handling, richer engineering operators/tolerances, OCR/table extraction, and expanded validation.
 
 ## Engineering context
 

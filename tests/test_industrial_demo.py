@@ -1,4 +1,9 @@
-from industrial_demo import build_matrix
+from freellmpool.industrial import (
+    Requirement,
+    VendorValue,
+    build_matrix,
+    build_report,
+)
 
 
 def test_build_matrix_detects_vendor_deviation() -> None:
@@ -15,9 +20,22 @@ def test_build_matrix_detects_vendor_deviation() -> None:
 
 
 def test_missing_fields_are_unverified() -> None:
-    matrix = build_matrix()
-    assert all(row["evidence"] for row in matrix)
-    assert all(
-        row["status"] in {"COMPLIANT", "DEVIATION", "UNVERIFIED"}
-        for row in matrix
-    )
+    requirements = [Requirement("R-01", "Rated voltage", "415 V")]
+    vendor_data = [
+        VendorValue("Vendor A", "Motor power", "75 kW", "Quotation p.1"),
+    ]
+
+    matrix = build_matrix(requirements, vendor_data)
+    assert matrix[0]["status"] == "UNVERIFIED"
+    assert matrix[0]["claim_status"] == "UNVERIFIED"
+    assert matrix[0]["evidence"] == "No matching quotation field"
+
+
+def test_report_contains_review_actions_and_summary() -> None:
+    report = build_report()
+    assert report["workflow"] == "rfq-compliance-review"
+    summary = report["summary"]
+    assert summary["requirements_checked"] == 4
+    assert summary["vendors_checked"] == 2
+    assert summary["deviations"] == 1
+    assert len(report["review_actions"]) == 1

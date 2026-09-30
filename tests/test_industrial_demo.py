@@ -39,3 +39,44 @@ def test_report_contains_review_actions_and_summary() -> None:
     assert summary["vendors_checked"] == 2
     assert summary["deviations"] == 1
     assert len(report["review_actions"]) == 1
+
+
+def test_load_rfq_input_from_json(tmp_path) -> None:
+    from freellmpool.industrial import load_rfq_input
+
+    path = tmp_path / "rfq.json"
+    path.write_text(
+        """{
+          "requirements": [
+            {"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}
+          ],
+          "vendor_data": [
+            {"vendor": "Vendor X", "parameter": "Rated voltage",
+             "value": "400 V", "evidence": "Quotation p.3",
+             "claim_status": "VERIFIED"}
+          ]
+        }""",
+        encoding="utf-8",
+    )
+
+    requirements, vendor_data = load_rfq_input(path)
+    assert requirements[0].parameter == "Rated voltage"
+    assert vendor_data[0].vendor == "Vendor X"
+    assert vendor_data[0].claim_status == "VERIFIED"
+
+
+def test_load_rfq_input_rejects_missing_required_field(tmp_path) -> None:
+    from freellmpool.industrial import load_rfq_input
+
+    path = tmp_path / "invalid.json"
+    path.write_text(
+        '{"requirements": [{"tag": "R-01"}], "vendor_data": []}',
+        encoding="utf-8",
+    )
+
+    try:
+        load_rfq_input(path)
+    except ValueError as exc:
+        assert "non-empty 'vendor_data' array" in str(exc)
+    else:
+        raise AssertionError("invalid RFQ input was accepted")

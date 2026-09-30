@@ -229,6 +229,7 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
     import json
 
     from .industrial import build_report, load_rfq_input, render_report, write_report
+    from .industrial_report import render_engineering_report
 
     requirements = vendor_data = commercial_data = None
     if args.input and args.extract:
@@ -256,8 +257,14 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
             return 2
     report = build_report(requirements, vendor_data, commercial_data)
     if args.output:
-        write_report(report, args.output)
+        if args.markdown:
+            Path(args.output).write_text(render_engineering_report(report) + "\n", encoding="utf-8")
+        else:
+            write_report(report, args.output)
         print(f"Wrote report: {args.output}")
+        return 0
+    if args.markdown:
+        print(render_engineering_report(report))
         return 0
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
@@ -2380,7 +2387,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_industrial.add_argument(
         "--output",
-        help="write the JSON report to a file instead of printing it",
+        help="write the report to a file instead of printing it",
+    )
+    p_industrial.add_argument(
+        "--markdown",
+        action="store_true",
+        help="render the recruiter-facing Markdown engineering report",
     )
     p_industrial.set_defaults(func=cmd_industrial_rfq)
 

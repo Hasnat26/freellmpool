@@ -128,11 +128,12 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Added packaging/release regression tests and an evidence-based release checklist.
 - [x] Release claims explicitly require executable, reproducible, checked-in, or directly inspectable evidence.
 
-### P3-M27 — Portfolio/recruiter evidence pack
-- [ ] Create a concise architecture/evidence page.
-- [ ] Add one reproducible end-to-end demo path.
-- [ ] Document engineering problem, deterministic controls, evidence policy and limitations.
-- [ ] Keep all portfolio claims measurable and defensible.
+### P3-M27 — Portfolio/recruiter evidence pack — DONE
+- [x] Created a concise architecture/evidence page at `docs/PORTFOLIO_EVIDENCE.md`.
+- [x] Added a reproducible end-to-end demo path at `examples/industrial_rfq/DEMO.md`.
+- [x] Documented the engineering problem, deterministic controls, evidence policy, human-review boundary, and limitations.
+- [x] Tied portfolio claims to inspectable repository artifacts and explicitly separated configuration evidence from execution evidence.
+- [x] Kept the unresolved P3-M14 CI execution-evidence gap visible rather than claiming CI success.
 
 ### P3-M28 — Final acceptance gate
 - [ ] Real CI green-run evidence.
@@ -152,5 +153,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M26 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M27.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M27 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M28.
 

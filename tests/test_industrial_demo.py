@@ -838,3 +838,71 @@ def test_commercial_risk_review_does_not_rank_or_select_vendors() -> None:
     assert len(risk_review) == 2
     assert all("rank" not in row and "winner" not in row for row in risk_review)
     assert [row["vendor"] for row in risk_review] == ["Vendor A", "Vendor B"]
+
+
+def test_document_intelligence_benchmark_loads_and_scores() -> None:
+    from freellmpool.industrial_benchmark import evaluate_benchmark, load_benchmark
+
+    root = Path(__file__).resolve().parents[1]
+    cases = load_benchmark(root / "examples" / "industrial_rfq" / "benchmark.json")
+
+    assert len(cases) == 5
+    assert {case["source_format"] for case in cases} == {"txt", "pdf", "table", "text"}
+    result = evaluate_benchmark(cases)
+    assert result["cases"] == 5
+    assert result["status_accuracy"] == 1.0
+    assert result["claim_status_accuracy"] == 1.0
+
+
+def test_document_benchmark_separates_extraction_from_compliance() -> None:
+    from freellmpool.industrial import Requirement, VendorValue
+    from freellmpool.industrial_benchmark import evaluate_extraction, load_benchmark
+
+    root = Path(__file__).resolve().parents[1]
+    cases = load_benchmark(root / "examples" / "industrial_rfq" / "benchmark.json")
+    case = next(item for item in cases if item["id"] == "TABLE-03")
+
+    expected_requirements = [
+        Requirement(item["tag"], item["parameter"], item["required"])
+        for item in case["requirements"]
+    ]
+    expected_vendor_data = [
+        VendorValue(
+            item["vendor"],
+            item["parameter"],
+            item["value"],
+            item["evidence"],
+            item["claim_status"],
+        )
+        for item in case["vendor_data"]
+    ]
+
+    metrics = evaluate_extraction(
+        expected_requirements,
+        expected_vendor_data,
+        expected_requirements,
+        expected_vendor_data,
+    )
+    assert metrics["requirement_precision"] == 1.0
+    assert metrics["requirement_recall"] == 1.0
+    assert metrics["vendor_field_precision"] == 1.0
+    assert metrics["vendor_field_recall"] == 1.0
+    assert metrics["evidence_coverage"] == 1.0
+    assert metrics["provenance_coverage"] == 1.0
+
+
+def test_document_benchmark_covers_contradiction_and_ambiguous_cases() -> None:
+    from freellmpool.industrial_benchmark import evaluate_deterministic_case, load_benchmark
+
+    root = Path(__file__).resolve().parents[1]
+    cases = load_benchmark(root / "examples" / "industrial_rfq" / "benchmark.json")
+
+    contradictory = next(item for item in cases if item["id"] == "CON-05")
+    ambiguous = next(item for item in cases if item["id"] == "AMB-04")
+
+    contradiction_result = evaluate_deterministic_case(contradictory)
+    ambiguous_result = evaluate_deterministic_case(ambiguous)
+
+    assert contradiction_result["status_accuracy"] == 1.0
+    assert contradiction_result["claim_status_accuracy"] == 1.0
+    assert ambiguous_result["status_accuracy"] == 1.0

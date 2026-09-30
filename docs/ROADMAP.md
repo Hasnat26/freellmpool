@@ -121,11 +121,12 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Review dependency and supply-chain controls: weekly Dependabot coverage for pip, GitHub Actions and Docker; commit-pinned workflow actions; bounded security-exception registry.
 - [x] Add security regression cases for document ingestion, prompt-like untrusted text, unsupported active content types and evidence/provenance boundaries.
 
-### P3-M26 — Packaging/release readiness
-- [ ] Verify wheel/sdist contents and native CLI installation.
-- [ ] Remove misleading legacy release claims.
-- [ ] Define an Industrial RFQ release checklist.
-- [ ] Only publish claims backed by executable evidence.
+### P3-M26 — Packaging/release readiness — DONE
+- [x] CI now builds and smoke-installs both wheel and sdist artifacts, including the native Industrial RFQ CLI.
+- [x] Replaced the legacy gateway container identity with an Industrial RFQ CLI container definition.
+- [x] Replaced the stale release checklist and removed obsolete coverage/release instructions.
+- [x] Added packaging/release regression tests and an evidence-based release checklist.
+- [x] Release claims explicitly require executable, reproducible, checked-in, or directly inspectable evidence.
 
 ### P3-M27 — Portfolio/recruiter evidence pack
 - [ ] Create a concise architecture/evidence page.
@@ -151,5 +152,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M25 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M26.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M26 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M27.
 

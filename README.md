@@ -772,6 +772,13 @@ For machine-readable output:
 freellmpool industrial-rfq --json
 freellmpool industrial-rfq --output rfq-report.json
 ```
+To run the workflow against your own structured input:
+
+```bash
+freellmpool industrial-rfq --input examples/industrial_rfq/sample_input.json
+```
+
+The input format is documented by the sample file: requirements are explicit engineering criteria, while each vendor value must carry quotation evidence and an evidence status.
 
 The repository-level compatibility demo remains available:
 

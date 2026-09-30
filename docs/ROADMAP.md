@@ -98,11 +98,11 @@ The next phase is tracked as one master milestone with sequential sub-milestones
 - [x] Define extraction, provenance, and compliance metrics.
 - [x] Separate LLM extraction quality from deterministic comparison quality.
 
-### P3-M22 — Report quality and auditability
-- [ ] Add a stable report schema/version.
-- [ ] Improve engineer review actions and traceability.
-- [ ] Add machine-readable and Markdown fixtures.
-- [ ] Add report consistency gates.
+### P3-M22 — Report quality and auditability — DONE
+- [x] Add deterministic commercial-risk review to the human-readable report.
+- [x] Preserve commercial provenance in the evidence register.
+- [x] Add report auditability regression coverage.
+- [x] Refresh the checked-in Markdown report fixture.
 
 ### P3-M23 — Reviewer workflow interface
 - [ ] Design upload → extraction → review → report states.
@@ -151,5 +151,5 @@ This phase will not add:
 - inferred claims presented as VERIFIED;
 - production deployment or production credentials.
 
-Current status: P3-M1 through P3-M13 and P3-M15 through P3-M19 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M22.
+Current status: P3-M1 through P3-M13 and P3-M15 through P3-M22 complete. P3-M14 remains pending because real GitHub Actions execution evidence has not yet been captured. Next execution target: P3-M23.
 

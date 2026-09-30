@@ -231,10 +231,27 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
     from .industrial import build_report, load_rfq_input, render_report, write_report
 
     requirements = vendor_data = None
+    if args.input and args.extract:
+        print("freellmpool industrial-rfq: use either --input or --extract, not both", file=sys.stderr)
+        return 2
     if args.input:
         try:
             requirements, vendor_data = load_rfq_input(args.input)
         except ValueError as exc:
+            print(f"freellmpool industrial-rfq: {exc}", file=sys.stderr)
+            return 2
+    elif args.extract:
+        import json
+        try:
+            payload = json.loads(Path(args.extract).read_text(encoding="utf-8"))
+            rfq_text = str(payload.get("rfq", "")).strip()
+            quotations = payload.get("quotations")
+            if not isinstance(quotations, list):
+                raise ValueError("extract input requires a quotations array")
+            pool = Pool.from_default_config()
+            from .industrial import extract_rfq_with_llm
+            requirements, vendor_data = extract_rfq_with_llm(pool, rfq_text, quotations)
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
             print(f"freellmpool industrial-rfq: {exc}", file=sys.stderr)
             return 2
     report = build_report(requirements, vendor_data)
@@ -2329,6 +2346,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_industrial.add_argument(
         "--input",
         help="path to a structured RFQ JSON input file",
+    )
+    p_industrial.add_argument(
+        "--extract",
+        help="path to raw RFQ/quotation JSON for LLM-assisted extraction",
     )
     p_industrial.add_argument(
         "--json",

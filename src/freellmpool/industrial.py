@@ -278,6 +278,28 @@ _PARAMETER_ALIASES = {
     "motor power": "motor power",
     "rated power": "motor power",
     "power": "motor power",
+    "current": "rated current",
+    "rated current": "rated current",
+    "motor current": "rated current",
+    "frequency": "frequency",
+    "rated frequency": "frequency",
+    "speed": "rotational speed",
+    "rated speed": "rotational speed",
+    "rotational speed": "rotational speed",
+    "rpm": "rotational speed",
+    "torque": "rated torque",
+    "rated torque": "rated torque",
+    "temperature": "temperature",
+    "ambient temperature": "temperature",
+    "operating temperature": "temperature",
+    "pressure": "pressure",
+    "operating pressure": "pressure",
+    "length": "length",
+    "width": "length",
+    "height": "length",
+    "diameter": "length",
+    "mass": "mass",
+    "weight": "mass",
     "efficiency class": "efficiency class",
     "efficiency": "efficiency class",
     "energy efficiency": "efficiency class",
@@ -295,7 +317,7 @@ def _normalise_value(value: str) -> str:
 
 def _numeric_unit(value: str) -> tuple[float, str] | None:
     import re
-    match = re.fullmatch(r"([-+]?\d+(?:\.\d+)?)\s*([a-zA-Z%]+)", value.strip())
+    match = re.fullmatch(r"([-+]?\d+(?:\.\d+)?)\s*([a-zA-Z°/%]+)", value.strip())
     if not match:
         return None
     number = float(match.group(1))
@@ -330,7 +352,25 @@ def _numeric_unit(value: str) -> tuple[float, str] | None:
     canonical, multiplier = conversions[unit]
     return number * multiplier, canonical
 
-def _engineering_comparison(required: str, offered: str) -> bool | None:
+_PARAMETER_DIMENSIONS = {
+    "rated voltage": "v",
+    "rated current": "a",
+    "motor power": "w",
+    "frequency": "hz",
+    "rotational speed": "rpm",
+    "rated torque": "nm",
+    "temperature": "c",
+    "pressure": "pa",
+    "length": "m",
+    "mass": "kg",
+}
+
+
+def _engineering_comparison(
+    required: str,
+    offered: str,
+    parameter: str | None = None,
+) -> bool | None:
     """Evaluate supported numeric engineering operators and tolerances.
 
     Returns None when the requirement is not a supported numeric expression,
@@ -342,6 +382,12 @@ def _engineering_comparison(required: str, offered: str) -> bool | None:
     if right is None:
         return None
 
+    expected_dimension = _PARAMETER_DIMENSIONS.get(
+        _normalise_parameter(parameter)
+    ) if parameter else None
+    if expected_dimension is not None and right[1] != expected_dimension:
+        return False
+
     expression = required.strip().replace("−", "-").replace("–", "-")
     tolerance_match = re.fullmatch(
         r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)\\s*(?:±|\\+/-)\\s*(\\d+(?:\\.\\d+)?)\\s*%",
@@ -350,15 +396,14 @@ def _engineering_comparison(required: str, offered: str) -> bool | None:
     if tolerance_match:
         nominal = _numeric_unit(f"{tolerance_match.group(1)} {tolerance_match.group(2)}")
         if nominal is None or nominal[1] != right[1]:
-            return None
+            return False
         tolerance = float(tolerance_match.group(3)) / 100.0
         lower = nominal[0] * (1.0 - tolerance)
         upper = nominal[0] * (1.0 + tolerance)
         return lower <= right[0] <= upper
 
     range_match = re.fullmatch(
-        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)?\\s*(?:to|\\-|\\.{2})\\s*"
-        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
+        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)?\\s*(?:to|\\-|\\.{2})\\s*"        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
         expression,
         flags=re.IGNORECASE,
     )
@@ -367,7 +412,7 @@ def _engineering_comparison(required: str, offered: str) -> bool | None:
         low = _numeric_unit(f"{range_match.group(1)} {low_unit}")
         high = _numeric_unit(f"{range_match.group(3)} {range_match.group(4)}")
         if low is None or high is None or low[1] != high[1] or low[1] != right[1]:
-            return None
+            return False
         lower, upper = sorted((low[0], high[0]))
         return lower <= right[0] <= upper
 
@@ -379,7 +424,7 @@ def _engineering_comparison(required: str, offered: str) -> bool | None:
         operator = operator_match.group(1) or "="
         target = _numeric_unit(f"{operator_match.group(2)} {operator_match.group(3)}")
         if target is None or target[1] != right[1]:
-            return None
+            return False
         if operator == ">=":
             return right[0] >= target[0]
         if operator == "<=":
@@ -393,8 +438,12 @@ def _engineering_comparison(required: str, offered: str) -> bool | None:
     return None
 
 
-def _values_match(required: str, offered: str) -> bool:
-    comparison = _engineering_comparison(required, offered)
+def _values_match(
+    required: str,
+    offered: str,
+    parameter: str | None = None,
+) -> bool:
+    comparison = _engineering_comparison(required, offered, parameter)
     if comparison is not None:
         return comparison
 
@@ -424,7 +473,10 @@ def _has_conflicting_values(items: Sequence[VendorValue]) -> bool:
     if len(items) < 2:
         return False
     first = items[0].value
-    return any(not _values_match(first, item.value) for item in items[1:])
+    return any(
+        not _values_match(first, item.value, items[0].parameter)
+        for item in items[1:]
+    )
 
 
 def build_matrix(
@@ -481,7 +533,11 @@ def build_matrix(
                 )
                 continue
 
-            status = "COMPLIANT" if _values_match(item.value, req.required) else "DEVIATION"
+            status = "COMPLIANT" if _values_match(
+        req.required,
+        item.value,
+        req.parameter,
+    ) else "DEVIATION"
             claim_status = item.claim_status
             if claim_status == "CONTRADICTED":
                 status = "UNVERIFIED"
@@ -698,30 +754,3 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         + ". Use claim_status VERIFIED only when the supplied quotation explicitly supports the value; "
         "otherwise use UNVERIFIED. Do not calculate compliance."
     )
-    prompt = json.dumps({"rfq": rfq_text, "quotations": quote_payload}, ensure_ascii=False)
-    try:
-        reply = pool.ask(prompt, system=system, max_tokens=3000, temperature=0.0, timeout=90.0, task="grounded-reading")
-    except Exception as exc:
-        raise ValueError(f"LLM RFQ extraction failed: {exc}") from exc
-
-    raw = reply.text.strip()
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1] if "\n" in raw else raw
-        if raw.endswith("```"):
-            raw = raw[:-3].rstrip()
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"LLM returned invalid extraction JSON: {exc.msg}") from exc
-
-    import tempfile
-    temp_path = None
-    try:
-        with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
-            json.dump(payload, handle, ensure_ascii=False)
-            temp_path = Path(handle.name)
-        return load_rfq_input(temp_path)
-    finally:
-        if temp_path is not None:
-            temp_path.unlink(missing_ok=True)
-

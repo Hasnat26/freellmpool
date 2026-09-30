@@ -82,7 +82,11 @@ def _normalise_vendor_data(
 
 
 def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValue], list[CommercialValue]]:
-    """Load and strictly validate a structured RFQ JSON input file."""
+    """Load and strictly validate a versioned structured RFQ JSON input file.
+
+    Pre-versioned fixtures default to schema 1.0 for backward compatibility.
+    Unsupported explicit versions fail closed.
+    """
     input_path = Path(path)
     try:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
@@ -94,6 +98,16 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     if not isinstance(payload, dict):
         raise ValueError("RFQ input must be a JSON object")
 
+    schema_version = payload.get("schema_version", RFQ_SCHEMA_VERSION)
+    if not isinstance(schema_version, str) or not schema_version.strip():
+        raise ValueError("RFQ input 'schema_version' must be a non-empty string")
+    schema_version = schema_version.strip()
+    if schema_version not in SUPPORTED_RFQ_SCHEMA_VERSIONS:
+        raise ValueError(
+            f"unsupported RFQ schema_version: {schema_version!r}; "
+            f"supported: {sorted(SUPPORTED_RFQ_SCHEMA_VERSIONS)}"
+        )
+
     raw_requirements = payload.get("requirements")
     raw_vendor_data = payload.get("vendor_data")
     if not isinstance(raw_requirements, list) or not raw_requirements:
@@ -101,39 +115,66 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     if not isinstance(raw_vendor_data, list) or not raw_vendor_data:
         raise ValueError("RFQ input requires a non-empty 'vendor_data' array")
 
+    def _required_text(item: dict[str, object], field: str, location: str) -> str:
+        if field not in item:
+            raise ValueError(f"{location} missing field: {field}")
+        value = item[field]
+        if not isinstance(value, str):
+            raise ValueError(f"{location}.{field} must be a string")
+        value = value.strip()
+        if not value:
+            raise ValueError(f"{location}.{field} must not be empty")
+        return value
+
+    def _optional_text(item: dict[str, object], field: str, location: str) -> str:
+        value = item.get(field, "")
+        if not isinstance(value, str):
+            raise ValueError(f"{location}.{field} must be a string when provided")
+        return value.strip()
+
     requirements: list[Requirement] = []
+    requirement_tags: set[str] = set()
     for index, item in enumerate(raw_requirements):
+        location = f"requirements[{index}]"
         if not isinstance(item, dict):
-            raise ValueError(f"requirements[{index}] must be an object")
-        missing = next((field for field in ("tag", "parameter", "required") if field not in item), None)
-        if missing:
-            raise ValueError(f"requirements[{index}] missing field: {missing}")
-        tag = str(item["tag"]).strip()
-        parameter = str(item["parameter"]).strip()
-        required = str(item["required"]).strip()
-        if not tag or not parameter or not required:
-            raise ValueError(f"requirements[{index}] fields must not be empty")
+            raise ValueError(f"{location} must be an object")
+        tag = _required_text(item, "tag", location)
+        parameter = _required_text(item, "parameter", location)
+        required = _required_text(item, "required", location)
+        tag_key = tag.casefold()
+        if tag_key in requirement_tags:
+            raise ValueError(f"{location} duplicate requirement tag: {tag!r}")
+        requirement_tags.add(tag_key)
         requirements.append(Requirement(tag, parameter, required))
 
     allowed_statuses = {"VERIFIED", "PARTIALLY VERIFIED", "UNVERIFIED", "INFERENCE", "ASSUMPTION", "CONTRADICTED"}
     vendor_data: list[VendorValue] = []
+    exact_vendor_claims: set[tuple[str, str, str, str]] = set()
     for index, item in enumerate(raw_vendor_data):
+        location = f"vendor_data[{index}]"
         if not isinstance(item, dict):
-            raise ValueError(f"vendor_data[{index}] must be an object")
-        missing = next((field for field in ("vendor", "parameter", "value") if field not in item), None)
-        if missing:
-            raise ValueError(f"vendor_data[{index}] missing field: {missing}")
-        vendor = str(item["vendor"]).strip()
-        parameter = str(item["parameter"]).strip()
-        value = str(item["value"]).strip()
-        evidence = str(item["evidence"]).strip()
-        claim_status = str(item.get("claim_status", "UNVERIFIED")).strip().upper()
-        if not vendor or not parameter or not value:
-            raise ValueError(f"vendor_data[{index}] required fields must not be empty")
+            raise ValueError(f"{location} must be an object")
+        vendor = _required_text(item, "vendor", location)
+        parameter = _required_text(item, "parameter", location)
+        value = _required_text(item, "value", location)
+        evidence = _optional_text(item, "evidence", location)
+        raw_status = item.get("claim_status", "UNVERIFIED")
+        if not isinstance(raw_status, str):
+            raise ValueError(f"{location}.claim_status must be a string")
+        claim_status = raw_status.strip().upper()
         if not evidence:
             claim_status = "UNVERIFIED"
         if claim_status not in allowed_statuses:
-            raise ValueError(f"vendor_data[{index}] invalid claim_status: {claim_status!r}")
+            raise ValueError(f"{location} invalid claim_status: {claim_status!r}")
+        duplicate_key = (
+            vendor.casefold(),
+            _normalise_parameter(parameter),
+            _normalise_value(value),
+            evidence.casefold(),
+        )
+        if duplicate_key in exact_vendor_claims:
+            raise ValueError(f"{location} duplicates an existing vendor claim")
+        exact_vendor_claims.add(duplicate_key)
         vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status)))
 
     raw_commercial = payload.get("commercial_data", [])
@@ -141,22 +182,28 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         raise ValueError("RFQ input 'commercial_data' must be an array when provided")
     commercial_data: list[CommercialValue] = []
     commercial_fields = ("vendor", "price", "currency", "lead_time", "warranty", "payment_terms")
+    commercial_vendors: set[str] = set()
     for index, item in enumerate(raw_commercial):
+        location = f"commercial_data[{index}]"
         if not isinstance(item, dict):
-            raise ValueError(f"commercial_data[{index}] must be an object")
-        missing = next((field for field in commercial_fields if field not in item), None)
-        if missing:
-            raise ValueError(f"commercial_data[{index}] missing field: {missing}")
-        values = {field: str(item[field]).strip() for field in commercial_fields}
-        evidence = str(item.get("evidence", "")).strip()
-        claim_status = str(item.get("claim_status", "UNVERIFIED")).strip().upper()
-        if any(not values[field] for field in commercial_fields):
-            raise ValueError(f"commercial_data[{index}] required fields must not be empty")
+            raise ValueError(f"{location} must be an object")
+        values = {field: _required_text(item, field, location) for field in commercial_fields}
+        vendor_key = values["vendor"].casefold()
+        if vendor_key in commercial_vendors:
+            raise ValueError(f"{location} duplicates commercial data for vendor {values['vendor']!r}")
+        commercial_vendors.add(vendor_key)
+        evidence = _optional_text(item, "evidence", location)
+        raw_status = item.get("claim_status", "UNVERIFIED")
+        if not isinstance(raw_status, str):
+            raise ValueError(f"{location}.claim_status must be a string")
+        claim_status = raw_status.strip().upper()
         if not evidence:
             claim_status = "UNVERIFIED"
         if claim_status not in allowed_statuses:
-            raise ValueError(f"commercial_data[{index}] invalid claim_status: {claim_status!r}")
-        commercial_data.append(CommercialValue(**values, evidence=evidence, claim_status=cast(ClaimStatus, claim_status)))
+            raise ValueError(f"{location} invalid claim_status: {claim_status!r}")
+        commercial_data.append(
+            CommercialValue(**values, evidence=evidence, claim_status=cast(ClaimStatus, claim_status))
+        )
 
     return requirements, vendor_data, commercial_data
 

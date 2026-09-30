@@ -685,3 +685,93 @@ def test_invalid_provenance_page_is_rejected(tmp_path) -> None:
         assert "positive integer" in str(exc)
     else:
         raise AssertionError("invalid provenance page was accepted")
+
+
+def test_parameter_specific_engineering_semantics_reject_incompatible_dimensions() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    cases = [
+        ("Rated voltage", "415 V", "415 A"),
+        ("Rated current", "100 A", "100 V"),
+        ("Motor power", "75 kW", "75 Hz"),
+        ("Frequency", "50 Hz", "50 kW"),
+        ("Rotational speed", "1500 rpm", "1500 kW"),
+        ("Rated torque", "100 Nm", "100 kPa"),
+        ("Temperature", "40 °C", "40 bar"),
+        ("Pressure", "1 MPa", "1 kW"),
+        ("Length", "100 mm", "100 kg"),
+        ("Mass", "100 kg", "100 m"),
+    ]
+
+    for parameter, required, offered in cases:
+        matrix = build_matrix(
+            [Requirement("R-01", parameter, required)],
+            [VendorValue("Vendor X", parameter, offered, "quote p.1", "VERIFIED")],
+        )
+        assert matrix[0]["status"] == "DEVIATION"
+
+
+def test_engineering_range_and_tolerance_boundaries_are_inclusive() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    cases = [
+        ("Rated voltage", "400-450 V", "400 V"),
+        ("Rated voltage", "400-450 V", "450 V"),
+        ("Motor power", "75 kW ±5%", "71.25 kW"),
+        ("Motor power", "75 kW ±5%", "78.75 kW"),
+        ("Pressure", "0.9 to 1.1 MPa", "1.1 MPa"),
+    ]
+
+    for parameter, required, offered in cases:
+        matrix = build_matrix(
+            [Requirement("R-01", parameter, required)],
+            [VendorValue("Vendor X", parameter, offered, "quote p.1", "VERIFIED")],
+        )
+        assert matrix[0]["status"] == "COMPLIANT"
+
+
+def test_engineering_range_and_tolerance_outside_boundaries_are_deviations() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    cases = [
+        ("Rated voltage", "400-450 V", "399.9 V"),
+        ("Rated voltage", "400-450 V", "450.1 V"),
+        ("Motor power", "75 kW ±5%", "71.24 kW"),
+        ("Motor power", "75 kW ±5%", "78.76 kW"),
+        ("Pressure", "0.9 to 1.1 MPa", "1.101 MPa"),
+    ]
+
+    for parameter, required, offered in cases:
+        matrix = build_matrix(
+            [Requirement("R-01", parameter, required)],
+            [VendorValue("Vendor X", parameter, offered, "quote p.1", "VERIFIED")],
+        )
+        assert matrix[0]["status"] == "DEVIATION"
+
+
+def test_strict_engineering_operators_respect_exclusive_boundaries() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    cases = [
+        ("> 400 V", "400 V", "DEVIATION"),
+        ("> 400 V", "400.1 V", "COMPLIANT"),
+        ("< 500 V", "500 V", "DEVIATION"),
+        ("< 500 V", "499.9 V", "COMPLIANT"),
+    ]
+
+    for required, offered, expected in cases:
+        matrix = build_matrix(
+            [Requirement("R-01", "Rated voltage", required)],
+            [VendorValue("Vendor X", "Rated voltage", offered, "quote p.1", "VERIFIED")],
+        )
+        assert matrix[0]["status"] == expected
+
+
+def test_unsupported_engineering_expression_fails_closed() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    matrix = build_matrix(
+        [Requirement("R-01", "Rated voltage", "approximately 415 V")],
+        [VendorValue("Vendor X", "Rated voltage", "415 V", "quote p.1", "VERIFIED")],
+    )
+    assert matrix[0]["status"] == "DEVIATION"

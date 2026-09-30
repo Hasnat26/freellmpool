@@ -228,9 +228,16 @@ def cmd_industrial_rfq(args: argparse.Namespace) -> int:
     """Run the deterministic industrial RFQ compliance workflow."""
     import json
 
-    from .industrial import build_report, render_report, write_report
+    from .industrial import build_report, load_rfq_input, render_report, write_report
 
-    report = build_report()
+    requirements = vendor_data = None
+    if args.input:
+        try:
+            requirements, vendor_data = load_rfq_input(args.input)
+        except ValueError as exc:
+            print(f"freellmpool industrial-rfq: {exc}", file=sys.stderr)
+            return 2
+    report = build_report(requirements, vendor_data)
     if args.output:
         write_report(report, args.output)
         print(f"Wrote report: {args.output}")
@@ -2318,6 +2325,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_industrial = sub.add_parser(
         "industrial-rfq",
         help="run the evidence-aware industrial RFQ compliance workflow",
+    )
+    p_industrial.add_argument(
+        "--input",
+        help="path to a structured RFQ JSON input file",
     )
     p_industrial.add_argument(
         "--json",

@@ -100,5 +100,6 @@
       "evidence": "Quotation p.3",
       "claim_status": "VERIFIED"
     }
-  ]
+  ],
+  "schema_version": "1.0"
 }

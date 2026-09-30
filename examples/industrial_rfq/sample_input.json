@@ -26,49 +26,57 @@
       "vendor": "Vendor A",
       "parameter": "Nominal voltage",
       "value": "0.415 kV",
-      "evidence": "Quotation p.1"
+      "evidence": "Quotation p.1",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor A",
       "parameter": "Motor power",
       "value": "75 kW",
-      "evidence": "Quotation p.1"
+      "evidence": "Quotation p.1",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor A",
       "parameter": "Efficiency class",
       "value": "IE3",
-      "evidence": "Quotation p.2"
+      "evidence": "Quotation p.2",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor A",
       "parameter": "Ingress protection",
       "value": "IP55",
-      "evidence": "Quotation p.2"
+      "evidence": "Quotation p.2",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor B",
       "parameter": "Rated voltage",
       "value": "415 V",
-      "evidence": "Quotation p.1"
+      "evidence": "Quotation p.1",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor B",
       "parameter": "Motor power",
       "value": "75 kW",
-      "evidence": "Quotation p.1"
+      "evidence": "Quotation p.1",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor B",
       "parameter": "Efficiency class",
       "value": "IE2",
-      "evidence": "Quotation p.2"
+      "evidence": "Quotation p.2",
+      "claim_status": "VERIFIED"
     },
     {
       "vendor": "Vendor B",
       "parameter": "Ingress protection",
       "value": "IP55",
-      "evidence": "Quotation p.2"
+      "evidence": "Quotation p.2",
+      "claim_status": "VERIFIED"
     }
   ],
   "commercial_data": [

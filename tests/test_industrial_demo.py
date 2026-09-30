@@ -213,6 +213,45 @@ def test_parameter_alias_and_unit_normalization() -> None:
     assert matrix[0]["offered_parameter"] == "Nominal voltage"
 
 
+def test_engineering_operators_ranges_and_tolerance() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    requirements = [
+        Requirement("R-01", "Motor power", ">= 75 kW"),
+        Requirement("R-02", "Rated voltage", "<= 415 V"),
+        Requirement("R-03", "Rated voltage", "> 400 V"),
+        Requirement("R-04", "Motor power", "70 to 80 kW"),
+        Requirement("R-05", "Rated voltage", "400-450 V"),
+        Requirement("R-06", "Rated voltage", "415 V ±5%"),
+        Requirement("R-07", "Rated voltage", "415 V +/-5%"),
+    ]
+    vendor_data = [
+        VendorValue("Vendor X", "Motor power", "75 kW", "quote p.1", "VERIFIED"),
+        VendorValue("Vendor X", "Rated voltage", "415 V", "quote p.1", "VERIFIED"),
+        VendorValue("Vendor X", "Motor power", "72 kW", "quote p.2", "VERIFIED"),
+        VendorValue("Vendor X", "Rated voltage", "450 V", "quote p.2", "VERIFIED"),
+    ]
+    matrix = build_matrix(requirements, vendor_data)
+
+    assert matrix[0]["status"] == "COMPLIANT"
+    assert matrix[1]["status"] == "COMPLIANT"
+    assert matrix[2]["status"] == "COMPLIANT"
+    assert matrix[3]["status"] == "COMPLIANT"
+    assert matrix[4]["status"] == "COMPLIANT"
+    assert matrix[5]["status"] == "COMPLIANT"
+    assert matrix[6]["status"] == "COMPLIANT"
+
+
+def test_engineering_operator_deviation_is_detected() -> None:
+    from freellmpool.industrial import Requirement, VendorValue, build_matrix
+
+    matrix = build_matrix(
+        [Requirement("R-01", "Motor power", ">= 75 kW")],
+        [VendorValue("Vendor X", "Motor power", "72 kW", "quote p.1", "VERIFIED")],
+    )
+    assert matrix[0]["status"] == "DEVIATION"
+
+
 def test_unit_mismatch_remains_deviation() -> None:
     from freellmpool.industrial import Requirement, VendorValue, build_matrix
 

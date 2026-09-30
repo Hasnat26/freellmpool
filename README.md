@@ -804,3 +804,17 @@ python -m pytest tests/test_industrial_demo.py -q
 ```
 
 The product specification and acceptance criteria are documented in [INDUSTRIAL_PRODUCT.md](INDUSTRIAL_PRODUCT.md). The industrial layer is evidence-aware: missing or unsupported claims remain UNVERIFIED rather than being silently promoted to facts. The deterministic baseline is intentionally separate from future LLM-assisted document extraction.
+
+### Recruiter-facing engineering report
+
+The industrial workflow can render the deterministic RFQ review as a concise Markdown engineering report:
+
+```python
+from freellmpool.industrial import build_report
+from freellmpool.industrial_report import render_engineering_report
+
+report = build_report(requirements, vendor_data, commercial_data)
+print(render_engineering_report(report))
+```
+
+The report exposes the technical compliance matrix, commercial information, evidence register, engineer review actions, and explicit workflow controls. It does not rank vendors or make an autonomous procurement decision.

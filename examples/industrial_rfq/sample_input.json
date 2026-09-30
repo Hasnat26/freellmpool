@@ -1,0 +1,74 @@
+{
+  "requirements": [
+    {
+      "tag": "R-01",
+      "parameter": "Rated voltage",
+      "required": "415 V"
+    },
+    {
+      "tag": "R-02",
+      "parameter": "Motor power",
+      "required": "75 kW"
+    },
+    {
+      "tag": "R-03",
+      "parameter": "Efficiency class",
+      "required": "IE3"
+    },
+    {
+      "tag": "R-04",
+      "parameter": "Ingress protection",
+      "required": "IP55"
+    }
+  ],
+  "vendor_data": [
+    {
+      "vendor": "Vendor A",
+      "parameter": "Rated voltage",
+      "value": "415 V",
+      "evidence": "Quotation p.1"
+    },
+    {
+      "vendor": "Vendor A",
+      "parameter": "Motor power",
+      "value": "75 kW",
+      "evidence": "Quotation p.1"
+    },
+    {
+      "vendor": "Vendor A",
+      "parameter": "Efficiency class",
+      "value": "IE3",
+      "evidence": "Quotation p.2"
+    },
+    {
+      "vendor": "Vendor A",
+      "parameter": "Ingress protection",
+      "value": "IP55",
+      "evidence": "Quotation p.2"
+    },
+    {
+      "vendor": "Vendor B",
+      "parameter": "Rated voltage",
+      "value": "415 V",
+      "evidence": "Quotation p.1"
+    },
+    {
+      "vendor": "Vendor B",
+      "parameter": "Motor power",
+      "value": "75 kW",
+      "evidence": "Quotation p.1"
+    },
+    {
+      "vendor": "Vendor B",
+      "parameter": "Efficiency class",
+      "value": "IE2",
+      "evidence": "Quotation p.2"
+    },
+    {
+      "vendor": "Vendor B",
+      "parameter": "Ingress protection",
+      "value": "IP55",
+      "evidence": "Quotation p.2"
+    }
+  ]
+}

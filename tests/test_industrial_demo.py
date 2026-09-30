@@ -80,3 +80,23 @@ def test_load_rfq_input_rejects_missing_required_field(tmp_path) -> None:
         assert "missing field: parameter" in str(exc)
     else:
         raise AssertionError("invalid RFQ input was accepted")
+
+
+def test_llm_extraction_reuses_strict_validation() -> None:
+    from freellmpool.industrial import extract_rfq_with_llm
+
+    class FakeReply:
+        text = '{"requirements":[{"tag":"R-01","parameter":"Rated voltage","required":"415 V"}],"vendor_data":[{"vendor":"Vendor X","parameter":"Rated voltage","value":"400 V","evidence":"Vendor X quotation p.1","claim_status":"VERIFIED"}]}'
+
+    class FakePool:
+        def ask(self, *args, **kwargs):
+            return FakeReply()
+
+    requirements, vendor_data = extract_rfq_with_llm(
+        FakePool(),
+        "Supply 415 V motor.",
+        [{"vendor": "Vendor X", "text": "400 V motor.", "evidence_prefix": "Vendor X quotation"}],
+    )
+    assert requirements[0].required == "415 V"
+    assert vendor_data[0].value == "400 V"
+    assert vendor_data[0].evidence == "Vendor X quotation p.1"

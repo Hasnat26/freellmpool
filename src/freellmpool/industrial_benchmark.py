@@ -8,10 +8,10 @@ from typing import Any, Sequence
 
 from .industrial import (
     CommercialValue,
+    EvidenceProvenance,
     Requirement,
     VendorValue,
     build_matrix,
-    load_rfq_input,
 )
 
 
@@ -62,6 +62,7 @@ def _case_inputs(case: dict[str, Any]) -> tuple[list[Requirement], list[VendorVa
             item["value"],
             item.get("evidence", ""),
             item.get("claim_status", "UNVERIFIED"),
+            EvidenceProvenance(**item["provenance"]) if isinstance(item.get("provenance"), dict) else None,
         )
         for item in case["vendor_data"]
     ]

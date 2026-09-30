@@ -162,3 +162,27 @@ def test_report_contains_evidence_register_and_review_flags() -> None:
     assert report["summary"]["claims_requiring_review"] == 1
     assert report["evidence_register"][0]["review_required"] == "YES"
     assert report["evidence_register"][1]["review_required"] == "NO"
+
+
+def test_document_ingestion_preserves_source_and_page(tmp_path) -> None:
+    from freellmpool.industrial import document_text, extract_document_pages
+
+    path = tmp_path / "vendor_quote.txt"
+    path.write_text("Rated voltage: 415 V\nMotor power: 75 kW", encoding="utf-8")
+    pages = extract_document_pages(path)
+    assert pages[0].source.endswith("vendor_quote.txt")
+    assert pages[0].page == 1
+    assert "Rated voltage: 415 V" in document_text(pages)
+
+
+def test_document_ingestion_rejects_unsupported_type(tmp_path) -> None:
+    from freellmpool.industrial import extract_document_pages
+
+    path = tmp_path / "quote.docx"
+    path.write_bytes(b"not supported")
+    try:
+        extract_document_pages(path)
+    except ValueError as exc:
+        assert "unsupported document type" in str(exc)
+    else:
+        raise AssertionError("unsupported document type was accepted")

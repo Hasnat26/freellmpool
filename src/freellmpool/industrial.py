@@ -26,7 +26,6 @@ ClaimStatus = Literal[
 
 
 @dataclass(frozen=True)
-@dataclass(frozen=True)
 class EvidenceProvenance:
     """Normalized source location for an extracted claim."""
 
@@ -37,6 +36,7 @@ class EvidenceProvenance:
     cell: str | None = None
 
 
+@dataclass(frozen=True)
 class Requirement:
     tag: str
     parameter: str

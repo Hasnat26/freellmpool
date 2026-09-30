@@ -87,9 +87,9 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     try:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
     except OSError as exc:
-        raise ValueError(f"cannot read RFQ input '${input_path}': ${exc}") from exc
+        raise ValueError(f"cannot read RFQ input '{input_path}': ${exc}") from exc
     except json.JSONDecodeError as exc:
-        raise ValueError(f"invalid RFQ JSON in '${input_path}': ${exc.msg}") from exc
+        raise ValueError(f"invalid RFQ JSON in '{input_path}': ${exc.msg}") from exc
 
     if not isinstance(payload, dict):
         raise ValueError("RFQ input must be a JSON object")
@@ -104,34 +104,34 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
     requirements: list[Requirement] = []
     for index, item in enumerate(raw_requirements):
         if not isinstance(item, dict):
-            raise ValueError(f"requirements[${index}] must be an object")
+            raise ValueError(f"requirements[{index}] must be an object")
         missing = next((field for field in ("tag", "parameter", "required") if field not in item), None)
         if missing:
-            raise ValueError(f"requirements[${index}] missing field: ${missing}")
+            raise ValueError(f"requirements[{index}] missing field: {missing}")
         tag = str(item["tag"]).strip()
         parameter = str(item["parameter"]).strip()
         required = str(item["required"]).strip()
         if not tag or not parameter or not required:
-            raise ValueError(f"requirements[${index}] fields must not be empty")
+            raise ValueError(f"requirements[{index}] fields must not be empty")
         requirements.append(Requirement(tag, parameter, required))
 
     allowed_statuses = {"VERIFIED", "PARTIALLY VERIFIED", "UNVERIFIED", "INFERENCE", "ASSUMPTION", "CONTRADICTED"}
     vendor_data: list[VendorValue] = []
     for index, item in enumerate(raw_vendor_data):
         if not isinstance(item, dict):
-            raise ValueError(f"vendor_data[${index}] must be an object")
+            raise ValueError(f"vendor_data[{index}] must be an object")
         missing = next((field for field in ("vendor", "parameter", "value", "evidence") if field not in item), None)
         if missing:
-            raise ValueError(f"vendor_data[${index}] missing field: ${missing}")
+            raise ValueError(f"vendor_data[{index}] missing field: {missing}")
         vendor = str(item["vendor"]).strip()
         parameter = str(item["parameter"]).strip()
         value = str(item["value"]).strip()
         evidence = str(item["evidence"]).strip()
         claim_status = str(item.get("claim_status", "VERIFIED")).strip().upper()
         if not vendor or not parameter or not value or not evidence:
-            raise ValueError(f"vendor_data[${index}] required fields must not be empty")
+            raise ValueError(f"vendor_data[{index}] required fields must not be empty")
         if claim_status not in allowed_statuses:
-            raise ValueError(f"vendor_data[${index}] invalid claim_status: ${claim_status!r}")
+            raise ValueError(f"vendor_data[{index}] invalid claim_status: {claim_status!r}")
         vendor_data.append(VendorValue(vendor, parameter, value, evidence, cast(ClaimStatus, claim_status)))
 
     raw_commercial = payload.get("commercial_data", [])

@@ -274,6 +274,69 @@ __all__ = [
     "build_matrix",
     "build_report",
     "load_rfq_input",
+    "extract_rfq_with_llm",
     "render_report",
     "write_report",
 ]
+
+def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[str, str]]) -> tuple[list[Requirement], list[VendorValue]]:
+    """Extract structured RFQ data with the gateway, then validate it locally.
+
+    The model is an extractor only. Compliance status is calculated later by
+    build_matrix from the extracted values and their evidence.
+    """
+    if not rfq_text.strip():
+        raise ValueError("RFQ text must not be empty")
+    if not quotations:
+        raise ValueError("at least one quotation is required")
+
+    quote_payload = []
+    for index, quote in enumerate(quotations):
+        vendor = str(quote.get("vendor", "")).strip()
+        text = str(quote.get("text", "")).strip()
+        evidence_prefix = str(quote.get("evidence_prefix", f"{vendor} quotation")).strip()
+        if not vendor or not text:
+            raise ValueError(f"quotations[{index}] requires vendor and text")
+        quote_payload.append({"vendor": vendor, "text": text, "evidence_prefix": evidence_prefix})
+
+    schema = {
+        "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
+        "vendor_data": [{"vendor": "Vendor A", "parameter": "Rated voltage",
+                         "value": "415 V", "evidence": "Vendor A quotation, section 2",
+                         "claim_status": "VERIFIED"}],
+    }
+    system = (
+        "You are an engineering document extraction component. Extract only facts explicitly stated "
+        "in the supplied RFQ and quotations. Never infer missing values. Every vendor value must include "
+        "a concise source/evidence reference. Return exactly one JSON object matching this schema: "
+        + json.dumps(schema, ensure_ascii=False)
+        + ". Use claim_status VERIFIED only when the supplied quotation explicitly supports the value; "
+        "otherwise use UNVERIFIED. Do not calculate compliance."
+    )
+    prompt = json.dumps({"rfq": rfq_text, "quotations": quote_payload}, ensure_ascii=False)
+    try:
+        reply = pool.ask(prompt, system=system, max_tokens=3000, temperature=0.0, timeout=90.0, task="grounded-reading")
+    except Exception as exc:
+        raise ValueError(f"LLM RFQ extraction failed: {exc}") from exc
+
+    raw = reply.text.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[1] if "\n" in raw else raw
+        if raw.endswith("```"):
+            raw = raw[:-3].rstrip()
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"LLM returned invalid extraction JSON: {exc.msg}") from exc
+
+    import tempfile
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
+            json.dump(payload, handle, ensure_ascii=False)
+            temp_path = Path(handle.name)
+        return load_rfq_input(temp_path)
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+

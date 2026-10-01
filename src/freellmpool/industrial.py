@@ -146,7 +146,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
             raise ValueError(f"{location} missing field: {field}")
         value = item[field]
         if not isinstance(value, str):
-            raise ValueError(f"{location}.{field} must be a string")
+            raise ValueError(f"{location} fields must be strings; each field must be a string")
         value = value.strip()
         if not value:
             raise ValueError(f"{location}.{field} must not be empty")
@@ -167,7 +167,7 @@ def load_rfq_input(path: str | Path) -> tuple[list[Requirement], list[VendorValu
         required = _required_text(item, "required", location)
         tag_key = tag.casefold()
         if tag_key in requirement_tags:
-            raise ValueError(f"{location} duplicate requirement tag: {tag!r}")
+            raise ValueError(f"{location} duplicate tag (duplicate requirement tag): {tag!r}")
         requirement_tags.add(tag_key)
         requirements.append(Requirement(tag, parameter, required))
     allowed_statuses = {"VERIFIED", "PARTIALLY VERIFIED", "UNVERIFIED", "INFERENCE", "ASSUMPTION", "CONTRADICTED"}
@@ -371,30 +371,32 @@ def _engineering_comparison(
     offered: str,
     parameter: str | None = None,
 ) -> bool | None:
-    """Evaluate supported numeric engineering operators and tolerances.
-
-    Returns None when the requirement is not a supported numeric expression,
-    allowing the caller to fall back to the existing exact normalized match.
-    """
+    """Evaluate supported numeric engineering expressions deterministically."""
     import re
 
     right = _numeric_unit(offered)
     if right is None:
         return None
 
-    expected_dimension = _PARAMETER_DIMENSIONS.get(
-        _normalise_parameter(parameter)
-    ) if parameter else None
+    expected_dimension = (
+        _PARAMETER_DIMENSIONS.get(_normalise_parameter(parameter))
+        if parameter
+        else None
+    )
     if expected_dimension is not None and right[1] != expected_dimension:
         return False
 
     expression = required.strip().replace("−", "-").replace("–", "-")
+
     tolerance_match = re.fullmatch(
-        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)\\s*(?:±|\\+/-)\\s*(\\d+(?:\\.\\d+)?)\\s*%",
+        r"([-+]?\d+(?:\.\d+)?)\s*([a-zA-Z°]+)\s*(?:±|\+/-)\s*"
+        r"(\d+(?:\.\d+)?)\s*%",
         expression,
     )
     if tolerance_match:
-        nominal = _numeric_unit(f"{tolerance_match.group(1)} {tolerance_match.group(2)}")
+        nominal = _numeric_unit(
+            f"{tolerance_match.group(1)} {tolerance_match.group(2)}"
+        )
         if nominal is None or nominal[1] != right[1]:
             return False
         tolerance = float(tolerance_match.group(3)) / 100.0
@@ -403,26 +405,38 @@ def _engineering_comparison(
         return lower <= right[0] <= upper
 
     range_match = re.fullmatch(
-        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)?\\s*(?:to|\\-|\\.{2})\\s*"        r"([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
+        r"([-+]?\d+(?:\.\d+)?)\s*([a-zA-Z°]+)?\s*"
+        r"(?:to|-|\.{2})\s*([-+]?\d+(?:\.\d+)?)\s*"
+        r"([a-zA-Z°]+)",
         expression,
         flags=re.IGNORECASE,
     )
     if range_match:
         low_unit = range_match.group(2) or range_match.group(4)
         low = _numeric_unit(f"{range_match.group(1)} {low_unit}")
-        high = _numeric_unit(f"{range_match.group(3)} {range_match.group(4)}")
-        if low is None or high is None or low[1] != high[1] or low[1] != right[1]:
+        high = _numeric_unit(
+            f"{range_match.group(3)} {range_match.group(4)}"
+        )
+        if (
+            low is None
+            or high is None
+            or low[1] != high[1]
+            or low[1] != right[1]
+        ):
             return False
         lower, upper = sorted((low[0], high[0]))
         return lower <= right[0] <= upper
 
     operator_match = re.fullmatch(
-        r"(>=|<=|>|<|=)?\\s*([-+]?\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)",
+        r"(>=|<=|>|<|=)?\s*([-+]?\d+(?:\.\d+)?)\s*"
+        r"([a-zA-Z°]+)",
         expression,
     )
     if operator_match:
         operator = operator_match.group(1) or "="
-        target = _numeric_unit(f"{operator_match.group(2)} {operator_match.group(3)}")
+        target = _numeric_unit(
+            f"{operator_match.group(2)} {operator_match.group(3)}"
+        )
         if target is None or target[1] != right[1]:
             return False
         if operator == ">=":
@@ -436,7 +450,6 @@ def _engineering_comparison(
         return right[0] == target[0]
 
     return None
-
 
 def _values_match(
     required: str,
@@ -483,79 +496,75 @@ def build_matrix(
     requirements: Sequence[Requirement] | None = None,
     vendor_data: Sequence[VendorValue] | None = None,
 ) -> list[dict[str, str]]:
-    """Build a requirement-by-vendor compliance matrix.
+    """Build a deterministic vendor-major requirement compliance matrix.
 
-    A missing quotation field is never treated as compliant.  It is explicitly
-    labelled UNVERIFIED so downstream review cannot mistake absence of evidence
-    for compliance.
+    Rows are ordered Vendor A requirements, then Vendor B requirements, etc.
+    Missing evidence is never treated as compliant. Conflicting claims fail closed.
     """
-
     reqs = _normalise_requirements(requirements)
     values = _normalise_vendor_data(vendor_data)
     vendors = tuple(dict.fromkeys(item.vendor for item in values))
     rows: list[dict[str, str]] = []
 
-    for req in reqs:
-        for vendor in vendors:
+    for vendor in vendors:
+        for req in reqs:
             matches = _matching_vendor_values(values, vendor, req.parameter)
             item = matches[0] if matches else None
+
             if item is None:
-                rows.append(
-                    {
-                        "requirement": req.tag,
-                        "vendor": vendor,
-                        "parameter": req.parameter,
-                        "offered_parameter": "MISSING",
-                        "required": req.required,
-                        "offered": "MISSING",
-                        "status": "UNVERIFIED",
-                        "evidence": "No matching quotation field",
-                        "claim_status": "UNVERIFIED",
-                    }
-                )
+                rows.append({
+                    "requirement": req.tag,
+                    "vendor": vendor,
+                    "parameter": req.parameter,
+                    "offered_parameter": "MISSING",
+                    "required": req.required,
+                    "offered": "MISSING",
+                    "status": "UNVERIFIED",
+                    "evidence": "No matching quotation field",
+                    "claim_status": "UNVERIFIED",
+                })
                 continue
 
             if _has_conflicting_values(matches):
                 evidence = " | ".join(
-                    f"{match.evidence}: {match.value}" for match in matches if match.evidence
+                    f"{match.evidence}: {match.value}"
+                    for match in matches
+                    if match.evidence
                 ) or "Conflicting quotation claims"
-                rows.append(
-                    {
-                        "requirement": req.tag,
-                        "vendor": vendor,
-                        "parameter": req.parameter,
-                        "required": req.required,
-                        "offered": "CONFLICTING",
-                        "status": "UNVERIFIED",
-                        "evidence": evidence,
-                        "claim_status": "CONTRADICTED",
-                    }
-                )
-                continue
-
-            status = "COMPLIANT" if _values_match(
-        req.required,
-        item.value,
-        req.parameter,
-    ) else "DEVIATION"
-            claim_status = item.claim_status
-            if claim_status == "CONTRADICTED":
-                status = "UNVERIFIED"
-            rows.append(
-                {
+                rows.append({
                     "requirement": req.tag,
                     "vendor": vendor,
                     "parameter": req.parameter,
+                    "offered_parameter": "CONFLICTING",
                     "required": req.required,
-                    "offered": item.value,
-                    "status": status,
-                    "evidence": item.evidence,
-                    "claim_status": claim_status,
-                }
+                    "offered": "CONFLICTING",
+                    "status": "UNVERIFIED",
+                    "evidence": evidence,
+                    "claim_status": "CONTRADICTED",
+                })
+                continue
+
+            status = (
+                "COMPLIANT"
+                if _values_match(req.required, item.value, req.parameter)
+                else "DEVIATION"
             )
+            if item.claim_status == "CONTRADICTED":
+                status = "UNVERIFIED"
+
+            rows.append({
+                "requirement": req.tag,
+                "vendor": vendor,
+                "parameter": req.parameter,
+                "offered_parameter": item.parameter,
+                "required": req.required,
+                "offered": item.value,
+                "status": status,
+                "evidence": item.evidence,
+                "claim_status": item.claim_status,
+            })
 
     return rows
-
 
 
 def _provenance_fields(provenance: EvidenceProvenance | None) -> dict[str, str]:
@@ -850,8 +859,8 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         "requirements": [{"tag": "R-01", "parameter": "Rated voltage", "required": "415 V"}],
         "vendor_data": [{"vendor": "Vendor A", "parameter": "Rated voltage",
                          "value": "415 V", "evidence": "Vendor A quotation, section 2",
-                         "claim_status": "VERIFIED", "provenance": {"source": "Vendor A quotation", "page": 2, "section": "Technical data", "table": null, "cell": null}}],
-        "commercial_data": [{"vendor": "Vendor A", "price": "10000", "currency": "USD", "lead_time": "8 weeks", "warranty": "12 months", "payment_terms": "30% advance", "evidence": "Vendor A quotation, commercial section", "claim_status": "VERIFIED", "provenance": {"source": "Vendor A quotation", "page": null, "section": "Commercial", "table": null, "cell": null}}],
+                         "claim_status": "VERIFIED", "provenance": {"source": "Vendor A quotation", "page": 2, "section": "Technical data", "table": None, "cell": None}}],
+        "commercial_data": [{"vendor": "Vendor A", "price": "10000", "currency": "USD", "lead_time": "8 weeks", "warranty": "12 months", "payment_terms": "30% advance", "evidence": "Vendor A quotation, commercial section", "claim_status": "VERIFIED", "provenance": {"source": "Vendor A quotation", "page": None, "section": "Commercial", "table": None, "cell": None}}],
     }
     system = (
         "You are an engineering document extraction component. Extract only facts explicitly stated "
@@ -861,3 +870,25 @@ def extract_rfq_with_llm(pool: object, rfq_text: str, quotations: Sequence[dict[
         + ". Use claim_status VERIFIED only when the supplied quotation explicitly supports the value; "
         "otherwise use UNVERIFIED. Do not calculate compliance."
     )
+    prompt = system + "\\n\\nRFQ:\\n" + rfq_text + "\\n\\nQUOTATIONS:\\n" + json.dumps(quote_payload, ensure_ascii=False)
+    ask = getattr(pool, "ask", None)
+    if not callable(ask):
+        raise TypeError("pool must provide an ask() method")
+    reply = ask(prompt)
+    raw = getattr(reply, "text", reply)
+    if not isinstance(raw, str) or not raw.strip():
+        raise ValueError("LLM extraction returned an empty response")
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("LLM extraction returned invalid JSON") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("LLM extraction must return a JSON object")
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json", delete=False) as handle:
+        json.dump(payload, handle, ensure_ascii=False)
+        temporary_path = Path(handle.name)
+    try:
+        return load_rfq_input(temporary_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)

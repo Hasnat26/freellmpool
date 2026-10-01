@@ -3,7 +3,6 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
-
 from scripts.verify_mcp_registry import RegistryVerificationError, verify_payload
 
 MANIFEST = {

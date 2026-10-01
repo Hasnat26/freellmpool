@@ -125,6 +125,7 @@ def test_conflicting_vendor_claims_are_unverified() -> None:
 
 def test_missing_evidence_forces_unverified(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     path = tmp_path / "rfq.json"
@@ -158,6 +159,7 @@ def test_missing_evidence_forces_unverified(tmp_path) -> None:
 
 def test_claim_status_defaults_to_unverified(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     path = tmp_path / "rfq.json"
@@ -180,6 +182,7 @@ def test_claim_status_defaults_to_unverified(tmp_path) -> None:
 
 def test_load_rfq_input_includes_commercial_data(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {
@@ -340,7 +343,7 @@ def test_document_rfq_extraction_passes_provenance_to_llm() -> None:
             self.prompt = prompt
             return FakeReply()
 
-    rfq = tmp_path = __import__("pathlib").Path("tests") / "_rfq_m7_temp.txt"
+    rfq = __import__("pathlib").Path("tests") / "_rfq_m7_temp.txt"
     quote = __import__("pathlib").Path("tests") / "_quote_m7_temp.txt"
     try:
         rfq.write_text("Required rated voltage: 415 V", encoding="utf-8")
@@ -388,6 +391,7 @@ def test_sample_rfq_is_reproducible_and_report_matches_fixture() -> None:
 
 def test_invalid_claim_status_is_rejected(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     path = tmp_path / "invalid-status.json"
@@ -427,6 +431,7 @@ def test_malformed_json_is_rejected(tmp_path) -> None:
 
 def test_empty_requirements_and_vendor_data_are_rejected(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     cases = [
@@ -468,6 +473,7 @@ def test_unverified_claim_remains_reviewable_even_with_matching_value() -> None:
 
 def test_rfq_schema_version_contract(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import RFQ_SCHEMA_VERSION, load_rfq_input
 
     base = {
@@ -493,6 +499,7 @@ def test_rfq_schema_version_contract(tmp_path) -> None:
 
 def test_duplicate_requirement_tags_are_rejected(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {
@@ -514,6 +521,7 @@ def test_duplicate_requirement_tags_are_rejected(tmp_path) -> None:
 
 def test_rfq_contract_rejects_non_string_fields(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {
@@ -532,6 +540,7 @@ def test_rfq_contract_rejects_non_string_fields(tmp_path) -> None:
 
 def test_rfq_schema_version_is_supported_and_backward_compatible(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import RFQ_SCHEMA_VERSION, load_rfq_input
 
     base = {
@@ -549,6 +558,7 @@ def test_rfq_schema_version_is_supported_and_backward_compatible(tmp_path) -> No
 
 def test_unsupported_rfq_schema_version_fails_closed(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {
@@ -568,6 +578,7 @@ def test_unsupported_rfq_schema_version_fails_closed(tmp_path) -> None:
 
 def test_rfq_schema_rejects_non_string_required_fields_and_duplicate_tags(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     cases = [
@@ -591,6 +602,7 @@ def test_rfq_schema_rejects_non_string_required_fields_and_duplicate_tags(tmp_pa
 
 def test_duplicate_vendor_claim_is_rejected_but_conflicting_claims_remain_supported(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     base = {
@@ -612,6 +624,7 @@ def test_duplicate_vendor_claim_is_rejected_but_conflicting_claims_remain_suppor
 
 def test_duplicate_commercial_vendor_record_is_rejected(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     base = {
@@ -634,6 +647,7 @@ def test_duplicate_commercial_vendor_record_is_rejected(tmp_path) -> None:
 
 def test_provenance_is_normalized_and_preserved(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import build_report, load_rfq_input
 
     payload = {
@@ -667,6 +681,7 @@ def test_provenance_is_normalized_and_preserved(tmp_path) -> None:
 
 def test_invalid_provenance_page_is_rejected(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class ReviewState(str, Enum):
+class ReviewState(StrEnum):
     """States in the human-reviewed RFQ workflow."""
 
     UPLOAD = "UPLOAD"
@@ -50,7 +50,7 @@ class ReviewSession:
         target: ReviewState,
         *,
         reference: str | None = None,
-    ) -> "ReviewSession":
+    ) -> ReviewSession:
         """Move the session to an allowed state with required references."""
 
         if target not in _ALLOWED_TRANSITIONS[self.state]:
@@ -123,7 +123,7 @@ class ReviewSession:
             f"unsupported reviewer transition target: {target.value}"
         )
 
-    def with_input(self, input_reference: str) -> "ReviewSession":
+    def with_input(self, input_reference: str) -> ReviewSession:
         """Attach the source RFQ reference during the upload state."""
 
         if self.state is not ReviewState.UPLOAD:
@@ -142,7 +142,7 @@ class ReviewSession:
             human_approved=False,
         )
 
-    def approve_review(self) -> "ReviewSession":
+    def approve_review(self) -> ReviewSession:
         """Record explicit human approval while remaining in REVIEW."""
 
         if self.state is not ReviewState.REVIEW:

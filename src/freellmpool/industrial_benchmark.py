@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from .industrial import (
     CommercialValue,
@@ -77,7 +78,7 @@ def evaluate_deterministic_case(case: dict[str, Any]) -> dict[str, Any]:
     actual_statuses = [row["status"] for row in matrix]
     status_matches = sum(
         actual == expected
-        for actual, expected in zip(actual_statuses, expected_statuses)
+        for actual, expected in zip(actual_statuses, expected_statuses, strict=False)
     )
     claim_status_matches = None
     expected_claim_statuses = case.get("expected_claim_statuses")
@@ -85,7 +86,7 @@ def evaluate_deterministic_case(case: dict[str, Any]) -> dict[str, Any]:
         actual_claims = [row["claim_status"] for row in matrix]
         claim_status_matches = sum(
             actual == expected
-            for actual, expected in zip(actual_claims, expected_claim_statuses)
+            for actual, expected in zip(actual_claims, expected_claim_statuses, strict=False)
         )
     expected_count = len(expected_statuses)
     return {
@@ -152,7 +153,6 @@ def evaluate_extraction(
         (item.vendor, item.parameter, item.value)
         for item in actual_vendor_data
     }
-    expected_evidence = sum(bool(item.evidence) for item in expected_vendor_data)
     actual_evidence = sum(bool(item.evidence) for item in actual_vendor_data)
     expected_provenance = sum(item.provenance is not None for item in expected_vendor_data)
     actual_provenance = sum(item.provenance is not None for item in actual_vendor_data)

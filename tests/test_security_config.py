@@ -117,6 +117,7 @@ def test_document_ingestion_rejects_unsupported_active_content_types(tmp_path) -
 
 def test_verified_llm_extraction_boundary_requires_evidence_and_provenance(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {
@@ -141,6 +142,7 @@ def test_verified_llm_extraction_boundary_requires_evidence_and_provenance(tmp_p
 
 def test_verified_commercial_claim_requires_provenance(tmp_path) -> None:
     import json
+
     from freellmpool.industrial import load_rfq_input
 
     payload = {

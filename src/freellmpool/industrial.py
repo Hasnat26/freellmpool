@@ -8,9 +8,10 @@ future LLM-assisted extraction layer.
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal, Sequence, cast
+from typing import Literal, cast
 
 RFQ_SCHEMA_VERSION = "1.0"
 SUPPORTED_RFQ_SCHEMA_VERSIONS = frozenset({RFQ_SCHEMA_VERSION})
